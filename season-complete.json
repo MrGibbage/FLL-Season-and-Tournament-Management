@@ -8,6 +8,14 @@
   "notes_copy_file_lists": "Files to copy into tournament folders. Common files are always copied. Division-specific files are copied based on using_divisions setting. Each entry maps source filename to destination filename.",
   "copy_file_list_common": [
     {
+      "source": "script_maker-win.exe",
+      "dest": "script_maker-win.exe"
+    },
+    {
+      "source": "script_maker-mac",
+      "dest": "script_maker-mac"
+    },
+    {
       "source": "instructions.pdf",
       "dest": "instructions.pdf"
     }

@@ -3,7 +3,7 @@
 Generate closing ceremony scripts from OJS files for FIRST LEGO League tournaments.
 
 This script validates OJS data, collects award winners and team information,
-and renders a closing ceremony script using a Jinja template.
+
 
 Usage:
     python fll-toast.py [--verbose] [--debug]
@@ -37,11 +37,19 @@ def print_splash():
     """Print TOAST splash screen."""
     print(f"\n{Fore.YELLOW}{'█' * 72}{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}█{Style.RESET_ALL}{'  ' * 35}{Fore.YELLOW}█{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}█{Style.RESET_ALL}                           {Fore.CYAN}╔╦╗╔═╗╔═╗╔═╗╔╦╗{Style.RESET_ALL}                            {Fore.YELLOW}█{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}█{Style.RESET_ALL}                           {Fore.CYAN} ║ ║ ║╠═╣╚═╗ ║ {Style.RESET_ALL}                            {Fore.YELLOW}█{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}█{Style.RESET_ALL}                           {Fore.CYAN} ╩ ╚═╝╩ ╩╚═╝ ╩ {Style.RESET_ALL}                            {Fore.YELLOW}█{Style.RESET_ALL}")
+    print(
+        f"{Fore.YELLOW}█{Style.RESET_ALL}                           {Fore.CYAN}╔╦╗╔═╗╔═╗╔═╗╔╦╗{Style.RESET_ALL}                            {Fore.YELLOW}█{Style.RESET_ALL}"
+    )
+    print(
+        f"{Fore.YELLOW}█{Style.RESET_ALL}                           {Fore.CYAN} ║ ║ ║╠═╣╚═╗ ║ {Style.RESET_ALL}                            {Fore.YELLOW}█{Style.RESET_ALL}"
+    )
+    print(
+        f"{Fore.YELLOW}█{Style.RESET_ALL}                           {Fore.CYAN} ╩ ╚═╝╩ ╩╚═╝ ╩ {Style.RESET_ALL}                            {Fore.YELLOW}█{Style.RESET_ALL}"
+    )
     print(f"{Fore.YELLOW}█{Style.RESET_ALL}{'  ' * 35}{Fore.YELLOW}█{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}█{Style.RESET_ALL}       {Fore.WHITE}Tournament OJS And Script Toolkit for FIRST LEGO League{Style.RESET_ALL}        {Fore.YELLOW}█{Style.RESET_ALL}")
+    print(
+        f"{Fore.YELLOW}█{Style.RESET_ALL}       {Fore.WHITE}Tournament OJS And Script Toolkit for FIRST LEGO League{Style.RESET_ALL}        {Fore.YELLOW}█{Style.RESET_ALL}"
+    )
     print(f"{Fore.YELLOW}█{Style.RESET_ALL}{'  ' * 35}{Fore.YELLOW}█{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}{'█' * 72}{Style.RESET_ALL}\n")
 
@@ -71,12 +79,12 @@ def print_error_msg(text: str):
 def load_config(config_path: str) -> dict:
     """Load tournament configuration file."""
     logger.info(f"Loading configuration from: {config_path}")
-    
+
     if not os.path.exists(config_path):
         print_error(logger, f"Configuration file not found: {config_path}")
-    
+
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         logger.info("✓ Configuration loaded successfully")
         return config
@@ -87,24 +95,10 @@ def load_config(config_path: str) -> dict:
 
 
 def generate_output_filename(ojs_filenames: list, suffix: str = "closing-ceremony") -> str:
-    """Generate output filename based on OJS filenames.
-    
-    Args:
-        ojs_filenames: List of OJS filenames from config
-        suffix: Suffix to add before .html (e.g., "closing-ceremony" or "summary")
-        
-    Returns:
-        Output HTML filename
-    """
-    # Take first OJS filename and modify it
+    """Generate output filename based on OJS filenames."""
     base_name = ojs_filenames[0]
-    
-    # Remove -div1 or -div2 suffix and .xlsm extension
-    base_name = base_name.replace('-div1.xlsm', '').replace('-div2.xlsm', '').replace('.xlsm', '')
-    
-    # Add suffix
+    base_name = base_name.replace("-div1.xlsm", "").replace("-div2.xlsm", "").replace(".xlsm", "")
     output_name = f"{base_name}-{suffix}.html"
-    
     logger.debug(f"Generated output filename: {output_name}")
     return output_name
 
@@ -115,83 +109,84 @@ def parse_arguments():
         description="TOAST - Tournament OJS And Script Toolkit: Generate closing ceremony scripts"
     )
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Enable verbose logging (INFO level)'
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose logging (INFO level)",
     )
     parser.add_argument(
-        '--debug', '-d',
-        action='store_true',
-        help='Enable debug logging (DEBUG level, implies --verbose)'
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug logging (DEBUG level, implies --verbose)",
     )
-    
+
     return parser.parse_args()
 
 
 def main():
     """Main execution function."""
-    # Parse arguments first
     args = parse_arguments()
-    
-    # Determine logging level
+
     if args.debug:
         log_debug = True
     elif args.verbose:
         log_debug = False  # INFO level
     else:
         log_debug = False  # Default (WARNING level in setup_logger when debug=False)
-    
-    # Print splash screen
+
     print_splash()
-    
-    # Get directory where THIS script is located
-    if getattr(sys, 'frozen', False):
-        # Running as compiled executable
+
+    if getattr(sys, "frozen", False):
         script_dir = os.path.dirname(sys.executable)
     else:
-        # Running as Python script
         script_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Set up logger with appropriate level
+
+    cwd_dir = os.getcwd()
+    if os.path.exists(os.path.join(cwd_dir, "tournament_config.json")):
+        base_dir = cwd_dir
+        base_note = "working directory"
+    else:
+        base_dir = script_dir
+        base_note = "script directory"
+
     global logger
     logger = setup_logger("ceremony_generator", debug=log_debug, log_dir=script_dir)
-    
+
     if args.debug:
         logger.info("Debug logging enabled")
     elif args.verbose:
         logger.info("Verbose logging enabled")
-    
+
     logger.info(f"Script location: {script_dir}")
-    
-    # Load configuration
-    config_path = os.path.join(script_dir, 'tournament_config.json')
+    logger.info(f"Asset base: {base_dir} ({base_note})")
+
+    config_path = os.path.join(base_dir, "tournament_config.json")
     config = load_config(config_path)
-    
-    # Extract configuration
-    info = config['INFO']
-    using_divisions = info['using_divisions']
-    ojs_filenames = info['ojs_filenames']
-    
-    # Read dual_emcee flag from OJS files at runtime (OR logic: TRUE if ANY OJS has it set)
+
+    info = config["INFO"]
+    using_divisions = info["using_divisions"]
+    ojs_filenames = info["ojs_filenames"]
+
     dual_emcee = False
     for ojs_file in ojs_filenames:
-        ojs_path = os.path.join(script_dir, ojs_file)
+        ojs_path = os.path.join(base_dir, ojs_file)
         if os.path.exists(ojs_path):
             try:
                 from openpyxl import load_workbook
+
                 wb = load_workbook(ojs_path, data_only=True)
                 ws = wb["Team and Program Information"]
                 dual_emcee_value = ws["F2"].value
                 wb.close()
-                
-                # Convert to boolean
+
                 if isinstance(dual_emcee_value, bool):
                     if dual_emcee_value:
                         dual_emcee = True
                         logger.debug(f"Dual emcee enabled from {ojs_file}")
-                        break  # Found TRUE, no need to check other files
+                        break
                 elif isinstance(dual_emcee_value, str):
-                    if dual_emcee_value.upper() in ['TRUE', 'YES', '1']:
+                    if dual_emcee_value.upper() in ["TRUE", "YES", "1"]:
                         dual_emcee = True
                         logger.debug(f"Dual emcee enabled from {ojs_file}")
                         break
@@ -202,195 +197,191 @@ def main():
                         break
             except Exception as e:
                 logger.debug(f"Could not read dual_emcee from {ojs_file}: {e}")
-    
+
     print(f"{Fore.CYAN}Tournament:{Style.RESET_ALL} {info['tournament_long_name']}")
     print(f"{Fore.CYAN}Using divisions:{Style.RESET_ALL} {using_divisions}")
     print(f"{Fore.CYAN}OJS files:{Style.RESET_ALL} {len(ojs_filenames)}")
     print(f"{Fore.CYAN}Dual emcee:{Style.RESET_ALL} {dual_emcee}")
-    
-    # Validate OJS files exist
+
     print_header("VALIDATING OJS FILES")
     for ojs_file in ojs_filenames:
-        ojs_path = os.path.join(script_dir, ojs_file)
+        ojs_path = os.path.join(base_dir, ojs_file)
         if os.path.exists(ojs_path):
             print_success(f"Found: {ojs_file}")
         else:
             print_error(logger, f"OJS file not found: {ojs_file}")
-    
-    # Validate OJS data
+
     print_header("VALIDATING OJS DATA")
     validator = OJSValidator()
-    
     for idx, ojs_file in enumerate(ojs_filenames):
-        ojs_path = os.path.join(script_dir, ojs_file)
+        ojs_path = os.path.join(base_dir, ojs_file)
         division = f"Division {idx + 1}" if using_divisions else ""
-        
         print(f"\n{Fore.YELLOW}Validating {ojs_file}...{Style.RESET_ALL}")
         validator.validate_all_sheets(ojs_path, division)
-    
-    # Display validation results
+
     if validator.has_errors():
         print(f"\n{Fore.RED}{'═' * 70}{Style.RESET_ALL}")
         print(f"{Fore.RED}VALIDATION FAILED{Style.RESET_ALL}".center(78))
         print(f"{Fore.RED}{'═' * 70}{Style.RESET_ALL}\n")
-        
         print(f"{Fore.RED}Errors found:{Style.RESET_ALL}")
         for error in validator.errors:
             print(f"  {error}")
-        
         if validator.warnings:
             print(f"\n{Fore.YELLOW}Warnings:{Style.RESET_ALL}")
             for warning in validator.warnings:
                 print(f"  {warning}")
-        
         print(f"\n{Fore.RED}Please fix the errors above and run the script again.{Style.RESET_ALL}")
         input("\nPress ENTER to exit...")
         sys.exit(1)
-    
+
     if validator.warnings:
         print(f"\n{Fore.YELLOW}Warnings found:{Style.RESET_ALL}")
         for warning in validator.warnings:
             print(f"  {warning}")
-        
-        response = input(f"\n{Fore.YELLOW}Continue despite warnings? [Y/n]: {Style.RESET_ALL}").strip().lower()
-        if response and response not in ['y', 'yes']:
+        response = (
+            input(f"\n{Fore.YELLOW}Continue despite warnings? [Y/n]: {Style.RESET_ALL}")
+            .strip()
+            .lower()
+        )
+        if response and response not in ["y", "yes"]:
             print("Operation cancelled by user")
             sys.exit(0)
-    
+
     print_success("All validations passed!")
-    
-    # Collect data
+
     print_header("COLLECTING AWARD DATA")
     collector = CeremonyDataCollector(config, dual_emcee=dual_emcee)
     template_data = {}
-    
-    # Basic info
-    template_data['tournament_name'] = info['tournament_long_name']
-    template_data['using_divisions'] = 1 if using_divisions else 0
-    template_data['dual_emcee'] = dual_emcee  # Pass to renderer
-    template_data['awards_config'] = config['AWARDS']
-    
-    # Collect team lists
+    template_data["tournament_name"] = info["tournament_long_name"]
+    template_data["using_divisions"] = 1 if using_divisions else 0
+    template_data["dual_emcee"] = dual_emcee
+    template_data["awards_config"] = config["AWARDS"]
+
     print("Collecting team lists...")
     if using_divisions:
-        div1_teams = collector.collect_team_list(os.path.join(script_dir, ojs_filenames[0]), "Division 1")
-        template_data['div1_list'] = collector.format_team_list_as_html(div1_teams)
-        
+        div1_teams = collector.collect_team_list(
+            os.path.join(base_dir, ojs_filenames[0]), "Division 1"
+        )
+        template_data["div1_list"] = collector.format_team_list_as_html(div1_teams)
         if len(ojs_filenames) > 1:
-            div2_teams = collector.collect_team_list(os.path.join(script_dir, ojs_filenames[1]), "Division 2")
-            template_data['div2_list'] = collector.format_team_list_as_html(div2_teams)
+            div2_teams = collector.collect_team_list(
+                os.path.join(base_dir, ojs_filenames[1]), "Division 2"
+            )
+            template_data["div2_list"] = collector.format_team_list_as_html(div2_teams)
     else:
-        all_teams = collector.collect_team_list(os.path.join(script_dir, ojs_filenames[0]))
-        template_data['team_list'] = collector.format_team_list_as_html(all_teams)
-    
-    # Collect advancing teams
+        all_teams = collector.collect_team_list(os.path.join(base_dir, ojs_filenames[0]))
+        template_data["team_list"] = collector.format_team_list_as_html(all_teams)
+
     print("Collecting advancing teams...")
     if using_divisions:
-        adv_d1 = collector.collect_advancing_teams(os.path.join(script_dir, ojs_filenames[0]), "Division 1")
-        template_data['ADV_D1'] = collector.format_team_list_as_html(adv_d1)
-        
+        adv_d1 = collector.collect_advancing_teams(
+            os.path.join(base_dir, ojs_filenames[0]), "Division 1"
+        )
+        template_data["ADV_D1"] = collector.format_team_list_as_html(adv_d1)
         if len(ojs_filenames) > 1:
-            adv_d2 = collector.collect_advancing_teams(os.path.join(script_dir, ojs_filenames[1]), "Division 2")
-            template_data['ADV_D2'] = collector.format_team_list_as_html(adv_d2)
+            adv_d2 = collector.collect_advancing_teams(
+                os.path.join(base_dir, ojs_filenames[1]), "Division 2"
+            )
+            template_data["ADV_D2"] = collector.format_team_list_as_html(adv_d2)
     else:
-        # Non-division tournaments
-        adv_teams = collector.collect_advancing_teams(os.path.join(script_dir, ojs_filenames[0]))
-        template_data['ADV'] = collector.format_team_list_as_html(adv_teams)
-    
-    # Collect awards
+        adv_teams = collector.collect_advancing_teams(os.path.join(base_dir, ojs_filenames[0]))
+        template_data["ADV"] = collector.format_team_list_as_html(adv_teams)
+
     print("Collecting award winners...")
-    for award in config['AWARDS']:
-        award_id = award['ID']
-        award_name = award['Name']
-        is_div_award = award['DivAwd']
-        
+    for award in config["AWARDS"]:
+        award_id = award["ID"]
+        award_name = award["Name"]
+        is_div_award = award["DivAwd"]
         print(f"  Processing {award_name}...")
-        
-        # Handle Robot Game awards separately
-        if award_id == 'P_AWD_RG':
+
+        if award_id == "P_AWD_RG":
             if using_divisions and is_div_award:
-                # Division Robot Game awards
-                d1_count = int(award.get('D1_count', 0))
+                d1_count = int(award.get("D1_count", 0))
                 if d1_count > 0:
                     rg_d1 = collector.collect_robot_game_awards(
-                        os.path.join(script_dir, ojs_filenames[0]), d1_count, "Division 1"
+                        os.path.join(base_dir, ojs_filenames[0]), d1_count, "Division 1"
                     )
-                    tag = award.get('ScriptTagD1', '')
+                    tag = award.get("ScriptTagD1", "")
                     if tag:
-                        template_data[tag] = collector.format_winners_as_html(rg_d1, include_score=True)
-                
+                        template_data[tag] = collector.format_winners_as_html(
+                            rg_d1, include_score=True
+                        )
+
                 if len(ojs_filenames) > 1:
-                    d2_count = int(award.get('D2_count', 0))
+                    d2_count = int(award.get("D2_count", 0))
                     if d2_count > 0:
                         rg_d2 = collector.collect_robot_game_awards(
-                            os.path.join(script_dir, ojs_filenames[1]), d2_count, "Division 2"
+                            os.path.join(base_dir, ojs_filenames[1]), d2_count, "Division 2"
                         )
-                        tag = award.get('ScriptTagD2', '')
+                        tag = award.get("ScriptTagD2", "")
                         if tag:
-                            template_data[tag] = collector.format_winners_as_html(rg_d2, include_score=True)
+                            template_data[tag] = collector.format_winners_as_html(
+                                rg_d2, include_score=True
+                            )
             else:
-                # Non-division Robot Game awards
-                tourn_count = int(award.get('TournCount', 0))
+                tourn_count = int(award.get("TournCount", 0))
                 if tourn_count > 0:
                     rg_winners = collector.collect_robot_game_awards(
-                        os.path.join(script_dir, ojs_filenames[0]), tourn_count, ""
+                        os.path.join(base_dir, ojs_filenames[0]), tourn_count, ""
                     )
-                    tag = award.get('ScriptTagNoDiv', '')
+                    tag = award.get("ScriptTagNoDiv", "")
                     if tag:
-                        template_data[tag] = collector.format_winners_as_html(rg_winners, include_score=True)
+                        template_data[tag] = collector.format_winners_as_html(
+                            rg_winners, include_score=True
+                        )
         else:
-            # Judged awards
             if using_divisions and is_div_award:
-                # Division awards - get labels from config
-                labels = award.get('Labels', [])
-                
-                d1_count = int(award.get('D1_count', 0))
+                labels = award.get("Labels", [])
+
+                d1_count = int(award.get("D1_count", 0))
                 if d1_count > 0:
-                    # Use only the number of labels allocated
                     d1_labels = labels[:d1_count]
                     winners_d1 = collector.collect_judged_awards(
-                        os.path.join(script_dir, ojs_filenames[0]), award, d1_labels, "Division 1",
-                        ojs_filenames[0]
+                        os.path.join(base_dir, ojs_filenames[0]),
+                        award,
+                        d1_labels,
+                        "Division 1",
+                        ojs_filenames[0],
                     )
-                    tag = award.get('ScriptTagD1', '')
+                    tag = award.get("ScriptTagD1", "")
                     if tag:
                         template_data[tag] = collector.format_winners_as_html(winners_d1)
-                    
-                    # Calculate grammar variables
-                    if award_id == 'J_AWD_IP':
-                        template_data['ip_this_these'] = "this team" if len(winners_d1) == 1 else "these teams"
-                    elif award_id == 'J_AWD_RD':
-                        template_data['rd_this_these'] = "this team" if len(winners_d1) == 1 else "these teams"
-                
+
+                    if award_id == "J_AWD_IP":
+                        template_data["ip_this_these"] = (
+                            "this team" if len(winners_d1) == 1 else "these teams"
+                        )
+                    elif award_id == "J_AWD_RD":
+                        template_data["rd_this_these"] = (
+                            "this team" if len(winners_d1) == 1 else "these teams"
+                        )
+
                 if len(ojs_filenames) > 1:
-                    d2_count = int(award.get('D2_count', 0))
+                    d2_count = int(award.get("D2_count", 0))
                     if d2_count > 0:
                         d2_labels = labels[:d2_count]
                         winners_d2 = collector.collect_judged_awards(
-                            os.path.join(script_dir, ojs_filenames[1]), award, d2_labels, "Division 2",
-                            ojs_filenames[1]
+                            os.path.join(base_dir, ojs_filenames[1]),
+                            award,
+                            d2_labels,
+                            "Division 2",
+                            ojs_filenames[1],
                         )
-                        tag = award.get('ScriptTagD2', '')
+                        tag = award.get("ScriptTagD2", "")
                         if tag:
                             template_data[tag] = collector.format_winners_as_html(winners_d2)
             else:
-                # Tournament-level awards (like Judges Award)
-                tourn_count = int(award.get('TournCount', 0))
-                labels = award.get('Labels', [])
-                
+                tourn_count = int(award.get("TournCount", 0))
+                labels = award.get("Labels", [])
+
                 if tourn_count > 0:
-                    # Collect from all divisions WITHOUT warnings
                     all_winners = []
-                    
                     for idx, ojs_file in enumerate(ojs_filenames):
-                        # Use the labels from config (not from OJS)
                         winners = collector.collect_judged_awards(
-                            os.path.join(script_dir, ojs_file), award, labels, "",
-                            ojs_file
+                            os.path.join(base_dir, ojs_file), award, labels, "", ojs_file
                         )
                         all_winners.extend(winners)
-                    
-                    # NOW check if we got the right total count
+
                     if len(all_winners) < tourn_count:
                         missing_count = tourn_count - len(all_winners)
                         collector.warnings.append(
@@ -401,96 +392,100 @@ def main():
                         collector.warnings.append(
                             f"{award_name} tournament award: {len(all_winners)} selected, {tourn_count} allocated ({extra_count} OVER-allocated)"
                         )
-                    
-                    tag = award.get('ScriptTagNoDiv', '')
+
+                    tag = award.get("ScriptTagNoDiv", "")
                     if tag:
                         template_data[tag] = collector.format_winners_as_html(all_winners)
-                    
-                    # Special handling for Judges Award
-                    if award_id == 'J_AWD_Judges':
-                        template_data['ja_count'] = len(all_winners)
-                        template_data['ja_go_goes'] = "The judges award goes to:" if len(all_winners) == 1 else "The judges awards go to:"
-    
-    # Set empty strings for any missing variables
-    expected_vars = ['div1_list', 'div2_list', 'team_list', 'ADV_D1', 'ADV_D2',
-                     'ip_this_these', 'rd_this_these', 'ja_count', 'ja_go_goes']
+
+                    if award_id == "J_AWD_Judges":
+                        template_data["ja_count"] = len(all_winners)
+                        template_data["ja_go_goes"] = (
+                            "The judges award goes to:"
+                            if len(all_winners) == 1
+                            else "The judges awards go to:"
+                        )
+
+    expected_vars = [
+        "div1_list",
+        "div2_list",
+        "team_list",
+        "ADV_D1",
+        "ADV_D2",
+        "ip_this_these",
+        "rd_this_these",
+        "ja_count",
+        "ja_go_goes",
+    ]
     for var in expected_vars:
         if var not in template_data:
             template_data[var] = ""
-    
+
     print_success(f"Collected data for {len(template_data)} template variables")
-    
-    # Display collector warnings
+
     if collector.warnings:
         print(f"\n{Fore.YELLOW}Data collection warnings:{Style.RESET_ALL}")
         for warning in collector.warnings:
             print(f"  {warning}")
-    
-    # Render templates
+
     print_header("RENDERING CEREMONY OUTPUTS")
-    
-    renderer = CeremonyRenderer(script_dir)
-    
-    # Track overall success
+
+    renderer = CeremonyRenderer(base_dir)
     all_success = True
     output_files = []
-    
-    # Render ceremony script
+
     print(f"{Fore.CYAN}Rendering ceremony script...{Style.RESET_ALL}")
-    script_template_file = 'script_template.html.jinja'
-    
-    # Validate script template variables
-    critical_vars = {'J_AWD_CHAMP_D1', 'J_AWD_CHAMP_D2', 'ADV_D1', 'ADV_D2'}
-    errors, warnings = renderer.validate_template_variables(script_template_file, template_data, critical_vars)
-    
+    script_template_file = "script_template.html.jinja"
+    critical_vars = {"J_AWD_CHAMP_D1", "J_AWD_CHAMP_D2", "ADV_D1", "ADV_D2"}
+    errors, warnings = renderer.validate_template_variables(
+        script_template_file, template_data, critical_vars
+    )
+
     if errors:
         print(f"{Fore.RED}Missing critical template variables:{Style.RESET_ALL}")
         for err in errors:
             print(f"  {err}")
-        print(f"\n{Fore.RED}Cannot generate ceremony script with missing critical variables.{Style.RESET_ALL}")
+        print(
+            f"\n{Fore.RED}Cannot generate ceremony script with missing critical variables.{Style.RESET_ALL}"
+        )
         input("\nPress ENTER to exit...")
         sys.exit(1)
-    
+
     if warnings:
         print(f"{Fore.YELLOW}Missing script template variables (will be empty):{Style.RESET_ALL}")
         for warn in warnings:
             print(f"  {warn}")
-    
-    # Generate script output filename and render
+
     script_filename = generate_output_filename(ojs_filenames, "closing-ceremony")
-    script_path = os.path.join(script_dir, script_filename)
-    
+    script_path = os.path.join(base_dir, script_filename)
+
     if renderer.render(script_template_file, template_data, script_path):
         print_success(f"Ceremony script: {script_filename}")
         output_files.append(script_path)
     else:
-        print_error_msg(f"Failed to render ceremony script")
+        print_error_msg("Failed to render ceremony script")
         all_success = False
-    
-    # Render summary
+
     print(f"\n{Fore.CYAN}Rendering ceremony summary...{Style.RESET_ALL}")
-    summary_template_file = 'summary_template.html.jinja'
-    
-    # Validate summary template (no critical vars for summary)
-    errors, warnings = renderer.validate_template_variables(summary_template_file, template_data, set())
-    
+    summary_template_file = "summary_template.html.jinja"
+    errors, warnings = renderer.validate_template_variables(
+        summary_template_file, template_data, set()
+    )
+
     if warnings:
         print(f"{Fore.YELLOW}Missing summary template variables (will be empty):{Style.RESET_ALL}")
         for warn in warnings:
             print(f"  {warn}")
-    
-    # Generate summary output filename and render
+
     summary_filename = generate_output_filename(ojs_filenames, "summary")
-    summary_path = os.path.join(script_dir, summary_filename)
-    
+    summary_path = os.path.join(base_dir, summary_filename)
+
     if renderer.render(summary_template_file, template_data, summary_path):
         print_success(f"Ceremony summary: {summary_filename}")
         output_files.append(summary_path)
     else:
-        print_error_msg(f"Failed to render ceremony summary")
+        print_error_msg("Failed to render ceremony summary")
         all_success = False
 
-    # Final status
     if all_success:
         print(f"\n{Fore.GREEN}{'═' * 70}{Style.RESET_ALL}")
         print(f"{Fore.GREEN}SUCCESS!{Style.RESET_ALL}".center(78))
@@ -499,21 +494,26 @@ def main():
         for output_path in output_files:
             print(f"  {output_path}")
         print()
-        
-        # Check if there were any warnings during the process
+
         has_warnings = (
-            (validator.warnings and len(validator.warnings) > 0) or 
-            (collector.warnings and len(collector.warnings) > 0) or
-            (warnings and len(warnings) > 0)
+            (validator.warnings and len(validator.warnings) > 0)
+            or (collector.warnings and len(collector.warnings) > 0)
+            or (warnings and len(warnings) > 0)
         )
-        
+
         if has_warnings:
             print(f"{Fore.YELLOW}{'─' * 70}{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}⚠ WARNINGS DETECTED{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}{'─' * 70}{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Files generated but there are warnings you should review.{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Scroll up to review the warnings and carefully review the outputs.{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Make changes to the OJS if needed and re-run the script generator.{Style.RESET_ALL}\n")
+            print(
+                f"{Fore.YELLOW}Files generated but there are warnings you should review.{Style.RESET_ALL}"
+            )
+            print(
+                f"{Fore.YELLOW}Scroll up to review the warnings and carefully review the outputs.{Style.RESET_ALL}"
+            )
+            print(
+                f"{Fore.YELLOW}Make changes to the OJS if needed and re-run the script generator.{Style.RESET_ALL}\n"
+            )
             input(f"{Fore.YELLOW}Press ENTER to exit...{Style.RESET_ALL}")
         else:
             input("Press ENTER to exit...")
