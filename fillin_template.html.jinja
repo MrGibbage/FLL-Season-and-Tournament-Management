@@ -10,6 +10,11 @@
     MAESTRO renders this template during folder creation to create a printable
     backup form. It lists every allocated award with blank spaces for team number
     and team name so the ceremony can continue even if computers are unavailable.
+
+    Expected variables for non-division events:
+    - Required: tournament_name
+    - Lists: rows_robot, rows_core, rows_judges, rows_other, rows_champs (string labels)
+    - Advancing count: adv_count (int)
 -->
 <!DOCTYPE html>
 <html lang="en">

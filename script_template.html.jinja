@@ -9,6 +9,13 @@
   
   TOAST (ceremony script generator) always looks for 'script_template.html.jinja' and doesn't
   need to know which template was used.
+
+    Expected variables for non-division events:
+    - Required: tournament_name, team_list
+    - Award HTML fragments: P_AWD_RG, J_AWD_IP, J_AWD_RD, J_AWD_CV, J_AWD_BT, J_AWD_Foo, J_AWD_Judges, J_AWD_CHAMP
+    - Advancing list: ADV (HTML)
+    - Optional helpers: ip_this_these, rd_this_these, ja_count, ja_go_goes
+    - Renderer supplies bg_color_0/bg_color_1 automatically
 -->
 <!DOCTYPE html>
 <html lang="en">

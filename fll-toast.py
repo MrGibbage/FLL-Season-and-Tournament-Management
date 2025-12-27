@@ -2,12 +2,13 @@
 
 Generate closing ceremony scripts from OJS files for FIRST LEGO League tournaments.
 
-This script validates OJS data, collects award winners and team information,
-
+Run notes:
+- Run from inside a tournament folder so `tournament_config.json` and OJS files are discovered in the working directory.
+- Outputs (script and summary) are written to the working directory; logs stay beside this script.
+- Use `--verbose` or `--debug` for more detail.
 
 Usage:
     python fll-toast.py [--verbose] [--debug]
-    (Run from within a tournament folder containing tournament_config.json)
 """
 
 import os
@@ -82,6 +83,7 @@ def load_config(config_path: str) -> dict:
 
     if not os.path.exists(config_path):
         print_error(logger, f"Configuration file not found: {config_path}")
+        return None
 
     try:
         with open(config_path, "r", encoding="utf-8") as f:
@@ -92,6 +94,7 @@ def load_config(config_path: str) -> dict:
         print_error(logger, f"Invalid JSON in configuration file: {e}")
     except Exception as e:
         print_error(logger, f"Error loading configuration: {e}")
+    return None
 
 
 def generate_output_filename(ojs_filenames: list, suffix: str = "closing-ceremony") -> str:
@@ -164,10 +167,28 @@ def main():
     config_path = os.path.join(base_dir, "tournament_config.json")
     config = load_config(config_path)
 
+    if not config:
+        print_error(logger, "Unable to load configuration; exiting.")
+        sys.exit(1)
+
+    required_config_keys = ["INFO", "AWARDS"]
+    missing_config = [key for key in required_config_keys if key not in config]
+    if missing_config:
+        print_error(logger, f"Missing required config section(s): {', '.join(missing_config)}")
+        sys.exit(1)
+
     info = config["INFO"]
+
+    required_info_keys = ["using_divisions", "ojs_filenames", "tournament_long_name"]
+    missing_info = [key for key in required_info_keys if key not in info]
+    if missing_info:
+        print_error(logger, f"Missing required INFO key(s): {', '.join(missing_info)}")
+        sys.exit(1)
+
     using_divisions = info["using_divisions"]
     ojs_filenames = info["ojs_filenames"]
 
+    # Derive dual emcee highlighting from Team and Program Information!F2 in any OJS
     dual_emcee = False
     for ojs_file in ojs_filenames:
         ojs_path = os.path.join(base_dir, ojs_file)
@@ -405,6 +426,7 @@ def main():
                             else "The judges awards go to:"
                         )
 
+    # Pre-seed optional template variables so missing tags render as empty strings
     expected_vars = [
         "div1_list",
         "div2_list",

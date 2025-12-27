@@ -23,7 +23,7 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Create virtual environment and install all dependencies
-cd 2025-all
+cd FLL-Season-and-Tournament-Management
 uv sync
 ```
 
@@ -41,7 +41,7 @@ pip install -e .
 
 ## Usage
 
-### Tournament Folder Builder
+### Tournament Folder Builder (MAESTRO)
 
 #### Quick Start (Default - Quiet Mode)
 
@@ -53,7 +53,7 @@ pip install -e .
 source .venv/bin/activate
 
 # Run the builder
-python build-tournament-folders.py
+python fll-maestro.py
 ```
 
 You'll be prompted to select a tournament or press ENTER to build all.
@@ -62,19 +62,19 @@ You'll be prompted to select a tournament or press ENTER to build all.
 
 ```bash
 # Interactive mode (with prompts and validation summary)
-python build-tournament-folders.py --interactive
+python fll-maestro.py --interactive
 
 # Verbose/debug mode
-python build-tournament-folders.py --verbose
+python fll-maestro.py --verbose
 
 # Process specific tournament without prompts
-python build-tournament-folders.py --tournament "Manassas_1"
+python fll-maestro.py --tournament "Manassas_1"
 
 # Combine options
-python build-tournament-folders.py --verbose --tournament "ABC"
+python fll-maestro.py --verbose --tournament "ABC"
 
 # Show help
-python build-tournament-folders.py --help
+python fll-maestro.py --help
 ```
 
 #### Available Flags
@@ -86,19 +86,19 @@ python build-tournament-folders.py --help
 | `--tournament NAME` | `-t NAME` | Process only the specified tournament |
 | `--skip-validation` | | Skip pre-flight checks (not recommended) |
 
-### Closing Ceremony Script Generator
+### Closing Ceremony Script Generator (TOAST)
 
-Run the ceremony script generator from within a tournament folder after OJS files are complete.
+Run the ceremony script generator from within a tournament folder after OJS files are complete so it can pick up `tournament_config.json` and the OJS files from the working directory.
 
 ```bash
 # Navigate to a tournament folder
 cd tournaments/Norfolk
 
 # Run the generator (verbose mode recommended)
-python ../../closing-ceremony-script-generator.py --verbose
+python ../../fll-toast.py --verbose
 
 # Debug mode for troubleshooting
-python ../../closing-ceremony-script-generator.py --debug
+python ../../fll-toast.py --debug
 ```
 
 #### Features
@@ -208,12 +208,12 @@ Log files are automatically created with timestamps in the script directory:
 
 ### Tournament Builder Logs
 - **Format**: `tournament_builder_YYYYMMDD_HHMMSS.log`
-- **Location**: `2025-all/` directory
+- **Location**: Repository directory (beside the scripts)
 - **Contents**: Full debug information (even in quiet mode)
 
 ### Ceremony Generator Logs
 - **Format**: `ceremony_generator_YYYYMMDD_HHMMSS.log`
-- **Location**: Tournament folder where you run the generator
+- **Location**: Repository directory (TOAST always logs next to `fll-toast.py`)
 - **Contents**: Validation results, data collection, and rendering details
 
 ### Log Retention
@@ -228,7 +228,7 @@ Use logs to troubleshoot issues:
 # View the most recent tournament builder log
 cat tournament_builder_*.log | tail -100
 
-# View the most recent ceremony generator log (from tournament folder)
+# View the most recent ceremony generator log (from repository root)
 cat ceremony_generator_*.log | tail -100
 
 # Search for errors in any log
@@ -244,9 +244,9 @@ grep "dual_emcee" ceremony_generator_*.log
 ## Project Structure
 
 ```
-2025-all/
-├── build-tournament-folders.py          # Tournament folder builder
-├── closing-ceremony-script-generator.py # Ceremony script generator
+FLL-Season-and-Tournament-Management/
+├── fll-maestro.py                       # Tournament folder builder
+├── fll-toast.py                         # Ceremony script generator
 ├── modules/
 │   ├── __init__.py
 │   ├── constants.py                     # Configuration constants
