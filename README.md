@@ -5,154 +5,61 @@ Includes two tools for tourament management:
 - **MAESTRO**: Managing All Event Seasons, Tournaments, Rosters, and OJSs for FIRST LEGO League. This tool will be used by regional leadership to create tournament folders (including improved OJS files which support automation) for each of the individual tournaments within that region. Think of this tool archestrating and coordinating all regional tournaments.
 - **TOAST**: Tournament OJS And Script Toolkit for FIRST LEGO League. This tool is used by individual tournament directors and judge advisors to validate OJS entries and generate a closing ceremony script. This of this tool as the entry point to the celebration after the tournament.
 
-## Features
+## Maestro Features
 
-- **Tournament Folder Builder**: Automatically creates tournament folders and populates OJS spreadsheets with team assignments
-- **Supports all tournament types** Division tournaments (such as VA-DC) and non-division tournaments
-- **Custom awards** Supports addition of any custom awards as needed
+- **Tournament Folder Builder**: Automatically creates tournament folders (select one or all tournaments at once) and populates OJS spreadsheets with team assignments
+- **Comprehensive Validation**: Checks tournament assignments, award definitions and allocations before building tournament folders
+- **Custom awards**: Supports addition of any custom awards as needed
+- **Other outputs**: Generates printable blank "fill-in" forms for hand-writing awardees
+- **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
+- **Inputs**: Uses an easy-to-understand excel spreadsheet for all tournaments and teams assigned to those tournaments. Spreadsheet also allocates awards per tournament. Also uses a single json file for overall season configuration.
+
+## Improved OJS Features
+
+- **Judging pods**: Statistics for judging pods
+- **Improved macros**: Custom macros support many new features
+  - Sort the Results and Rankings worksheet by any column
+  - Locked cells prevent inadvertent altering of formulas
+  - Admin menu to lock, unlock, and add new teams
+  - Practice mode by populating OJS with random scores
+- **Automation Support**: OJS directly feeds TOAST. No need to manually transcribe scores, team numbers and names into the closing ceremony script
+- **Recognizable**: Improved but familiar OJS is virtually indistinguishable from FIRST-distributed OJS from years past
+
+## Toast Features
+
 - **Closing Ceremony Script Generator**: Validates OJS data and generates HTML ceremony scripts with award winners
 - **Dual Emcee Support**: Optional alternating color highlighting for two emcees reading the ceremony script
 - **Comprehensive Validation**: Checks scores, ranges, and award allocations before ceremony script generation
-- **Other outputs** Generates printable blank "fill-in" forms for hand-writing awardees, simplified summaries
+- **Custom awards**: Supports addition of any custom awards as needed
+- **Other outputs**: Generates simplified HTML summaries
+- **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
+
 
 ## Installation
 
-### Using uv (Recommended)
-
-```bash
-# Install uv if you haven't already
-# Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-# macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Create virtual environment and install all dependencies
-cd FLL-Season-and-Tournament-Management
-uv sync
-```
-
-The `uv sync` command creates the virtual environment, installs all dependencies from `pyproject.toml`, and sets up the project in editable mode - all in one step!
-
-### Using pip (Alternative)
-
-```bash
-cd 2025-all
-python -m venv .venv
-.venv\Scripts\activate  # Windows
-source .venv/bin/activate  # macOS/Linux
-pip install -e .
-```
+As a regional tournament manager, or program delivery partner, simply copy the files from this repo into a folder of your choice. Most testing has been done on Windows, but executables are included for MacOS. As a tournament director or judge advisor for a single tournament, you will be given a link to download your ready-to-use OJS(s) and TOAST software
 
 ## Usage
 
 ### Tournament Folder Builder (MAESTRO)
 
-#### Quick Start (Default - Quiet Mode)
+Once you have downloaded the files in this repo, you will have some editing to do.  
+See the configuration section below to edit the season.json file.  
+Edit the tournament excel spreadsheet (file name is configured in the season.json file). There are several important worksheets that will need updating to suit your region's needs. There are instructions on the worksheets which should help you get started.  
+You will also want to edit the jinja template files using any text editor such as Notepad, Notepad++, or VS Code. The closing ceremony script is probably the most important one, so make sure it has the verbiage you need. If you have any custom awards, you will want to include them here.  
+Once you have everything edited and saved (be sure to exit out of the workbook), you can run fll-maestro.exe from the same folder. Type in the name of a single tournament, or press enter to build all tournaments. Pay attention for any warnings or errors.  
+If everything built correctly and you have no changes to make, move the folders to some cloud-based file sharing platform such as OneDrive, Google Drive or Dropbox. Get a sharing link to the folders and share the link with your tournament directors and judge advisors.  
 
-```bash
-# Activate environment (if using uv)
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-source .venv/bin/activate
+### OJS usage
 
-# Run the builder
-python fll-maestro.py
-```
-
-You'll be prompted to select a tournament or press ENTER to build all.
-
-#### Command-Line Options
-
-```bash
-# Interactive mode (with prompts and validation summary)
-python fll-maestro.py --interactive
-
-# Verbose/debug mode
-python fll-maestro.py --verbose
-
-# Process specific tournament without prompts
-python fll-maestro.py --tournament "Manassas_1"
-
-# Combine options
-python fll-maestro.py --verbose --tournament "ABC"
-
-# Show help
-python fll-maestro.py --help
-```
-
-#### Available Flags
-
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--interactive` | `-i` | Show prompts, validation summary, and confirmations |
-| `--verbose` | `-v` | Enable debug logging to console and file |
-| `--tournament NAME` | `-t NAME` | Process only the specified tournament |
-| `--skip-validation` | | Skip pre-flight checks (not recommended) |
+Review the included toast-instructions.pdf for detailed instructions for each worksheet. Two important details: 1) You must use the desktop version of Excel. There will be significant feature reduction if using the cloud version of Excel. 2) enable macros when opening spreadsheet.  
+When you are done entering scores and choosing awards/advancing teams, save and close the workbook. You can now run fll-toast.exe.  
 
 ### Closing Ceremony Script Generator (TOAST)
 
-Run the ceremony script generator from within a tournament folder after OJS files are complete so it can pick up `tournament_config.json` and the OJS files from the working directory.
-
-```bash
-# Navigate to a tournament folder
-cd tournaments/Norfolk
-
-# Run the generator (verbose mode recommended)
-python ../../fll-toast.py --verbose
-
-# Debug mode for troubleshooting
-python ../../fll-toast.py --debug
-```
-
-#### Features
-
-- **Automatic Validation**: Checks all scores, awards, and team data before generating script
-- **HTML Output**: Generates formatted ceremony script with proper headings and formatting
-- **Dual Emcee Mode**: Enable by setting cell F2 to TRUE in the "Team and Program Information" sheet
-  - When enabled, alternating lightblue/yellow highlighting on each paragraph
-  - Helps two emcees track who reads next
-  - Controlled at runtime - no need to regenerate config files
-- **Award Integration**: Automatically populates award winners from OJS files
-- **Division Support**: Handles both single and dual-division tournaments
-
-#### Dual Emcee Highlighting
-
-To enable dual emcee highlighting:
-1. Open any OJS file for the tournament
-2. Go to "Team and Program Information" worksheet
-3. Set cell F2 to TRUE
-4. Run the ceremony script generator
-
-The generator checks all OJS files - if ANY file has F2=TRUE, highlighting is enabled.
-
-#### Command-Line Options
-
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--verbose` | `-v` | Enable verbose logging (INFO level) |
-| `--debug` | `-d` | Enable debug logging (DEBUG level, implies --verbose) |
-
-## Modes
-
-### Quiet Mode (Default)
-- Minimal console output
-- Logs everything to file
-- Always prompts for tournament selection
-- Best for regular use
-
-### Interactive Mode (`--interactive`)
-- Full validation summary display
-- Confirmation prompts
-- Progress indicators with status messages
-- Best for troubleshooting or first-time setup
-
-### Verbose Mode (`--verbose`)
-- Debug-level logging to console and file
-- Detailed operation information
-- Shows table operations, file copies, etc.
-- Best for debugging issues
+Running fll-toast.exe does several important things. First it will validate the entries on all of the worksheets. Did you miss a cell and leave it blank? Or enter a number that doesn't make sense (like a 6 in judging cell). Did you forget to assign an award that was allocated for your tournament? If any of these are found in the validation, a warning message will appear or if the error is severe, the program will exit and you will have to fix the error before proceeding. Warnings will generally continue with execution, but serve as a reminder to double-check the entries and results.  
+If everything is ok and no errors were found, you should have a couple of new html files. The first one is the closing ceremony script. You can email it to the emcees where they could perhaps read it off a tablet or cell phone, or you can open it on a laptop that you will take to the ceremony.  
+If you have two emcees, you might want to try the highlighting feature which will color every-other-row in the script to make it easier for them to follow along. Look for the cell on the Team and Program Information worksheet to enable highlighting.
 
 ## Configuration
 
@@ -221,65 +128,10 @@ Log files are automatically created with timestamps in the script directory:
 - **Location**: Repository directory (TOAST always logs next to `fll-toast.py`)
 - **Contents**: Validation results, data collection, and rendering details
 
-### Log Retention
-- Manual cleanup (files are not auto-deleted)
-- Useful for troubleshooting and audit trails
-
-### Reading Logs
-
-Use logs to troubleshoot issues:
-
-```bash
-# View the most recent tournament builder log
-cat tournament_builder_*.log | tail -100
-
-# View the most recent ceremony generator log (from repository root)
-cat ceremony_generator_*.log | tail -100
-
-# Search for errors in any log
-grep ERROR *.log
-
-# Find specific tournament in builder logs
-grep "Manassas_1" tournament_builder_*.log
-
-# Check dual emcee status in ceremony logs
-grep "dual_emcee" ceremony_generator_*.log
-```
-
-## Project Structure
-
-```
-FLL-Season-and-Tournament-Management/
-├── fll-maestro.py                       # Tournament folder builder
-├── fll-toast.py                         # Ceremony script generator
-├── modules/
-│   ├── __init__.py
-│   ├── constants.py                     # Configuration constants
-│   ├── logger.py                        # Logging setup
-│   ├── file_operations.py               # File/folder operations & tournament config
-│   ├── excel_operations.py              # Excel table read/write
-│   ├── worksheet_setup.py               # OJS worksheet configuration & conditional formatting
-│   ├── user_feedback.py                 # Progress tracking and validation
-│   ├── ceremony_validator.py            # OJS data validation for ceremony scripts
-│   ├── ceremony_data_collector.py       # Extract team/award data from OJS files
-│   └── ceremony_renderer.py             # Jinja2 template rendering
-├── script_template.html.jinja           # Ceremony script template
-├── season.json                          # Season configuration
-├── pyproject.toml                       # Project dependencies
-└── [tournament_folder]/                 # Output location (specified in season.json)
-    └── [tournament_name]/
-        ├── [ojs_file].xlsm              # OJS spreadsheet with teams and scores
-        ├── tournament_config.json        # Generated tournament configuration
-        ├── [ceremony_script].html        # Generated ceremony script (after running generator)
-        ├── script_template.html.jinja    # Ceremony template (copied here)
-        ├── script_maker-win.exe
-        ├── script_maker-mac
-        └── ...
-```
 
 ## Troubleshooting
 
-### Tournament Builder Issues
+### Tournament Builder Issues (MAESTRO)
 
 **"Could not open tournament file"**
 - Ensure Excel file is closed before running
@@ -300,7 +152,7 @@ FLL-Season-and-Tournament-Management/
 - Ensure virtual environment is activated
 - Run `uv sync` to reinstall dependencies
 
-### Ceremony Script Generator Issues
+### Ceremony Script Generator Issues (TOAST)
 
 **"Validation errors found"**
 - Review the error messages - they indicate specific OJS data issues
@@ -334,9 +186,4 @@ FLL-Season-and-Tournament-Management/
 
 ## Development
 
-### Installing Dev Dependencies
-
-```bash
-# Install dev dependencies (pytest, black, ruff)
-uv sync --extra dev
-```
+Are you comfortable editing python programs? If so, and you feel like there is some functionality missing from MAESTRO or TOAST, then feel free to clone this repo and make your own changes. We have a page here with some more details about what's going on behind the scenes.
