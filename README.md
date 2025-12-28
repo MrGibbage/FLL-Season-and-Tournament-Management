@@ -1,14 +1,16 @@
 # OJS Tournament Builder & Ceremony Script Generator
 
-Automated tools to prepare per-tournament folders, populate OJS (Online Judge System) spreadsheets, and generate closing ceremony scripts for FIRST LEGO League tournaments.
+Automated tools to prepare per-tournament folders, including population of OJS (Official Judging Spreadsheet) workbooks, data vailidation and generate closing ceremony scripts for FIRST LEGO League tournaments.
 
 ## Features
 
 - **Tournament Folder Builder**: Automatically creates tournament folders and populates OJS spreadsheets with team assignments
+- **Supports division tournaments (such as VA-DC) and non-division tournaments
+- **Supports addition of any custom awards as needed
 - **Closing Ceremony Script Generator**: Validates OJS data and generates HTML ceremony scripts with award winners
 - **Dual Emcee Support**: Optional alternating color highlighting for two emcees reading the ceremony script
-- **Conditional Formatting**: Visual feedback in OJS files for awards, ranks, and advancing teams
 - **Comprehensive Validation**: Checks scores, ranges, and award allocations before ceremony script generation
+- **Generates printable blank "fill-in" forms for hand-writing awardees
 
 ## Installation
 
