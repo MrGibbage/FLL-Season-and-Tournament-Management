@@ -5,12 +5,12 @@ Automated tools to prepare per-tournament folders, including population of OJS (
 ## Features
 
 - **Tournament Folder Builder**: Automatically creates tournament folders and populates OJS spreadsheets with team assignments
-- **Supports division tournaments (such as VA-DC) and non-division tournaments
-- **Supports addition of any custom awards as needed
+- **Supports all tournament types** Division tournaments (such as VA-DC) and non-division tournaments
+- **Custom awards** Supports addition of any custom awards as needed
 - **Closing Ceremony Script Generator**: Validates OJS data and generates HTML ceremony scripts with award winners
 - **Dual Emcee Support**: Optional alternating color highlighting for two emcees reading the ceremony script
 - **Comprehensive Validation**: Checks scores, ranges, and award allocations before ceremony script generation
-- **Generates printable blank "fill-in" forms for hand-writing awardees
+- **Other outputs** Generates printable blank "fill-in" forms for hand-writing awardees, simplified summaries
 
 ## Installation
 
