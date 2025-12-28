@@ -3,7 +3,7 @@
 Automated tools to prepare per-tournament folders, including population of OJS (Official Judging Spreadsheet) workbooks, data vailidation and generate closing ceremony scripts for FIRST LEGO League tournaments.
 Includes two tools for tourament management:
 - **MAESTRO**: Managing All Event Seasons, Tournaments, Rosters, and OJSs for FIRST LEGO League. This tool will be used by regional leadership to create tournament folders (including improved OJS files which support automation) for each of the individual tournaments within that region. Think of this tool archestrating and coordinating all regional tournaments.
-- **TOAST**: Tournament OJS And Script Toolkit for FIRST LEGO League. This tool is used by individual tournament directors and judge advisors to validate OJS entries and generate a closing ceremony script.
+- **TOAST**: Tournament OJS And Script Toolkit for FIRST LEGO League. This tool is used by individual tournament directors and judge advisors to validate OJS entries and generate a closing ceremony script. This of this tool as the entry point to the celebration after the tournament.
 
 ## Features
 
