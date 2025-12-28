@@ -18,7 +18,7 @@ logger = logging.getLogger("ojs_builder")
 
 def _to_int(val: Any, default: int = 0) -> int:
     """Safely coerce value to an int.
-    
+
     Accepts pandas.Series, numpy arrays, lists/tuples (uses first element), or scalars.
     Returns `default` on missing/NaN/uncoercible values.
     """
@@ -47,53 +47,53 @@ def _to_int(val: Any, default: int = 0) -> int:
 
 def check_workbook_is_closed(xlsx_path: str) -> bool:
     """Check if an Excel workbook is closed by looking for temporary lock files.
-    
+
     Excel creates a temporary lock file (starting with ~$) when a workbook is open.
-    
+
     Args:
         xlsx_path: Path to the Excel workbook
-        
+
     Returns:
         True if workbook appears to be closed, False if it's open
     """
     if not os.path.exists(xlsx_path):
         logger.warning(f"Workbook not found: {xlsx_path}")
         return True
-    
+
     directory = os.path.dirname(xlsx_path)
     if not directory:
         directory = "."
     filename = os.path.basename(xlsx_path)
     lock_filename = f"~${filename}"
     lock_path = os.path.join(directory, lock_filename)
-    
+
     is_closed = not os.path.exists(lock_path)
-    
+
     if not is_closed:
         logger.debug(f"Lock file detected for {filename}: {lock_filename}")
     else:
         logger.debug(f"No lock file found for {filename} at {lock_path}")
-    
+
     return is_closed
 
 
 def verify_workbooks_closed(*workbook_paths: str) -> None:
     """Verify that all specified workbooks are closed.
-    
+
     Raises an error if any workbook appears to be open (has a temporary lock file).
-    
+
     Args:
         *workbook_paths: Variable number of paths to Excel workbooks
-        
+
     Raises:
         RuntimeError: If any workbook is currently open
     """
     open_workbooks = []
-    
+
     for path in workbook_paths:
         if not check_workbook_is_closed(path):
             open_workbooks.append(os.path.basename(path))
-    
+
     if open_workbooks:
         if len(open_workbooks) == 1:
             files_str = open_workbooks[0]
@@ -101,12 +101,9 @@ def verify_workbooks_closed(*workbook_paths: str) -> None:
         else:
             files_str = "', '".join(open_workbooks)
             message = f"The following workbooks are currently open in Excel: '{files_str}'"
-        
-        raise RuntimeError(
-            f"{message}\n"
-            "Please close the file(s) and try again."
-        )
-    
+
+        raise RuntimeError(f"{message}\n" "Please close the file(s) and try again.")
+
     logger.debug(f"Verified {len(workbook_paths)} workbook(s) are closed")
 
 
@@ -125,10 +122,10 @@ def read_table_as_df(
         table_name: Name of the Excel table to read
         require_table: If True, raise an error if table is not found
         convert_integer_floats: If True, convert float columns with whole numbers to Int64
-        
+
     Returns:
         DataFrame containing the table data
-        
+
     Raises:
         RuntimeError: If workbook cannot be opened
         KeyError: If sheet or table is not found (when require_table=True)
@@ -136,9 +133,9 @@ def read_table_as_df(
     """
     if not os.path.exists(xlsx_path):
         raise FileNotFoundError(f"Excel file not found: {xlsx_path}")
-    
+
     logger.debug(f"Reading table '{table_name}' from sheet '{sheet_name}' in {xlsx_path}")
-    
+
     try:
         wb = load_workbook(xlsx_path, data_only=True)
     except Exception as e:
@@ -153,31 +150,25 @@ def read_table_as_df(
 
     if table_name not in ws.tables:
         if require_table:
-            raise KeyError(
-                f"Table {table_name!r} not found on sheet {sheet_name!r} in {xlsx_path}"
-            )
+            raise KeyError(f"Table {table_name!r} not found on sheet {sheet_name!r} in {xlsx_path}")
         return pd.DataFrame()
 
     table = ws.tables[table_name]
     ref = table.ref
     if not isinstance(ref, str) or ":" not in ref:
-        raise ValueError(
-            f"Unexpected table.ref for {table_name!r} on {sheet_name!r}: {ref!r}"
-        )
+        raise ValueError(f"Unexpected table.ref for {table_name!r} on {sheet_name!r}: {ref!r}")
 
     try:
         start, end = ref.split(":")
         start_col, start_row = coordinate_from_string(start)
         end_col, end_row = coordinate_from_string(end)
     except Exception as e:
-        raise ValueError(
-            f"Could not parse table.ref '{ref}' for {table_name!r}: {e}"
-        ) from e
+        raise ValueError(f"Could not parse table.ref '{ref}' for {table_name!r}: {e}") from e
 
     header_row_idx = int(start_row) - 1
     usecols = f"{start_col}:{end_col}"
     nrows = int(end_row) - int(start_row)
-    
+
     if nrows <= 0:
         try:
             df = pd.read_excel(
@@ -252,10 +243,10 @@ def read_table_as_dict(
         key_col: Column name to use as key (defaults to first column)
         value_col: Column name to use as value (defaults to second column)
         require_unique_keys: If True, raise error on duplicate keys
-        
+
     Returns:
         Dictionary mapping keys to values
-        
+
     Raises:
         ValueError: If table doesn't have exactly 2 columns or has duplicate keys
         KeyError: If specified key/value columns are not found
@@ -308,13 +299,13 @@ def add_table_dataframe(
     debug: bool = False,
 ) -> int:
     """Append a pandas.DataFrame to an existing Excel table.
-    
+
     This function intelligently handles column mismatches:
     - Validates DataFrame has all required columns for the table
     - Uses only columns that exist in both DataFrame and OJS table
     - Warns about extra columns in DataFrame or missing columns in OJS
     - Fills OJS columns not in DataFrame with None
-    
+
     Args:
         wb: The Excel workbook object
         sheet_name: Name of the worksheet containing the table
@@ -323,59 +314,58 @@ def add_table_dataframe(
         require_all_columns: If True, require exact column match (legacy mode)
         keep_vba: Placeholder for VBA preservation (not currently used)
         debug: If True, print diagnostic information
-        
+
     Returns:
         Number of rows written to the table
-        
+
     Raises:
         KeyError: If sheet or table is not found
         ValueError: If DataFrame is missing required columns
     """
     if data is None or data.empty:
-        print_error(logger, "Attempting to add empty or None DataFrame to table. "
-                   f"Sheet: {sheet_name}, Table: {table_name}")
+        logger.warning(
+            f"Skipping write: empty DataFrame for table '{table_name}' on sheet '{sheet_name}'."
+        )
         return 0
 
     if sheet_name not in wb.sheetnames:
         print_error(
             logger,
             f"Sheet '{sheet_name}' not found in workbook",
-            error_type='missing_sheet',
+            error_type="missing_sheet",
             context={
-                'workbook': 'OJS file',
-                'sheet_name': sheet_name,
-                'available_sheets': list(wb.sheetnames)
-            }
+                "workbook": "OJS file",
+                "sheet_name": sheet_name,
+                "available_sheets": list(wb.sheetnames),
+            },
         )
     ws = wb[sheet_name]
 
     if table_name not in ws.tables:
-        available_tables = ', '.join(ws.tables.keys()) if ws.tables else 'none'
+        available_tables = ", ".join(ws.tables.keys()) if ws.tables else "none"
         print_error(
             logger,
             f"Table '{table_name}' not found on sheet '{sheet_name}'",
-            error_type='missing_table',
+            error_type="missing_table",
             context={
-                'table_name': table_name,
-                'sheet_name': sheet_name,
-                'available_tables': list(ws.tables.keys())
-            }
+                "table_name": table_name,
+                "sheet_name": sheet_name,
+                "available_tables": list(ws.tables.keys()),
+            },
         )
-    
+
     logger.debug(f"Adding {len(data)} rows to table '{table_name}' on sheet '{sheet_name}'")
-    
+
     table = ws.tables[table_name]
     table_range = table.ref
 
     table_head = ws[table_range][0]
     table_data_rows = ws[table_range][1:]
-    headers = [
-        c.value.strip() if isinstance(c.value, str) else c.value for c in table_head
-    ]
+    headers = [c.value.strip() if isinstance(c.value, str) else c.value for c in table_head]
 
     df = data.copy()
     df.columns = [c.strip() if isinstance(c, str) else c for c in df.columns]
-    
+
     # Validate required columns
     if table_name in REQUIRED_COLUMNS:
         required_cols = REQUIRED_COLUMNS[table_name]
@@ -387,21 +377,21 @@ def add_table_dataframe(
                 f"DataFrame has: {list(df.columns)}"
             )
         logger.debug(f"✓ DataFrame has all required columns for {table_name}")
-    
+
     # Check for column mismatches (more forgiving approach)
     df_cols_set = set(df.columns)
     table_cols_set = set(headers)
-    
+
     extra_in_df = df_cols_set - table_cols_set
     missing_in_df = table_cols_set - df_cols_set
     matching_cols = df_cols_set & table_cols_set
-    
+
     if extra_in_df:
         logger.warning(
             f"DataFrame has {len(extra_in_df)} column(s) not in OJS table '{table_name}': {sorted(extra_in_df)}"
         )
         logger.warning("These columns will be ignored")
-    
+
     if missing_in_df:
         logger.info(
             f"OJS table '{table_name}' has {len(missing_in_df)} column(s) not in DataFrame: {sorted(missing_in_df)}"
@@ -430,8 +420,7 @@ def add_table_dataframe(
         if df_iter_index >= total_rows:
             break
         if all(
-            (cell.value is None)
-            or (isinstance(cell.value, str) and cell.value.strip() == "")
+            (cell.value is None) or (isinstance(cell.value, str) and cell.value.strip() == "")
             for cell in row_tuple
         ):
             target_row_idx = row_tuple[0].row
