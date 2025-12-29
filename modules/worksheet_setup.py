@@ -236,31 +236,34 @@ def set_up_award_worksheet(
     j_cols = tournament.filter(regex=f"^{AWARD_COLUMN_PREFIX_JUDGED}")
     j_awards_df = pd.DataFrame(columns=["Award", "ID"])
 
-        for this_col_name, series in j_cols.items():
-            count = _to_int(series)
+    for this_col_name, series in j_cols.items():
+        count = _to_int(series)
 
-            if count <= 0:
+        if count <= 0:
+            logger.warning(
+                f"{tournament[COL_SHORT_NAME]} has zero awards allocated for {this_col_name}; dropdown will be empty."
+            )
+            continue
+
+        for award_num in range(1, count + 1):
+            label_col = AWARD_LABEL_PREFIX + str(award_num)
+            # Check if this Label column exists
+            if label_col not in label_columns:
                 logger.warning(
-                    f"{tournament[COL_SHORT_NAME]} has zero awards allocated for {this_col_name}; dropdown will be empty."
+                    f"Label column '{label_col}' not found in AwardDef table, using blank value"
                 )
-                continue
-
-            for award_num in range(1, count + 1):
-                label_col = AWARD_LABEL_PREFIX + str(award_num)
-            
-                # Check if this Label column exists
-                if label_col not in label_columns:
-                    logger.warning(f"Label column '{label_col}' not found in AwardDef table, using blank value")
+                thisValue = None
+            else:
+                sel = dfAwardDef.loc[dfAwardDef["ColumnName"] == this_col_name, label_col]
+                try:
+                    thisValue = sel.iat[0]
+                except (IndexError, KeyError):
+                    logger.warning(
+                        f"Could not find value for {this_col_name} in column {label_col}"
+                    )
                     thisValue = None
-                else:
-                    sel = dfAwardDef.loc[dfAwardDef["ColumnName"] == this_col_name, label_col]
-                    try:
-                        thisValue = sel.iat[0]
-                    except (IndexError, KeyError):
-                        logger.warning(f"Could not find value for {this_col_name} in column {label_col}")
-                        thisValue = None
-            
-                j_awards_df.loc[len(j_awards_df)] = [thisValue, this_col_name]
+
+            j_awards_df.loc[len(j_awards_df)] = [thisValue, this_col_name]
 
     add_table_dataframe(book, SHEET_AWARD_DROPDOWNS, TABLE_AWARD_DROPDOWNS, j_awards_df)
     logger.debug(
