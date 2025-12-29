@@ -1,15 +1,15 @@
 # OJS Tournament Builder & Ceremony Script Generator
 
-Automated tools to prepare per-tournament folders, including population of OJS (Official Judging Spreadsheet) workbooks, data vailidation and generate closing ceremony scripts for FIRST LEGO League tournaments.
+Automated tools to prepare per-tournament folders, populate OJS (Official Judging Spreadsheet) workbooks, validate data, and generate closing ceremony scripts for FIRST LEGO League tournaments.
 Includes two tools for tournament management:
-- **MAESTRO**: Managing All Event Seasons, Tournaments, Rosters, and OJSs for FIRST LEGO League. This tool will be used by regional leadership to create tournament folders (including improved OJS files which support automation) for each of the individual tournaments within that region. Think of this tool archestrating and coordinating all regional tournaments.
-- **TOAST**: Tournament OJS And Script Toolkit for FIRST LEGO League. This tool is used by individual tournament directors and judge advisors to validate OJS entries and generate a closing ceremony script. Think of this tool as the entry point to the celebration after the tournament.
+- **MAESTRO**: Managing All Event Seasons, Tournaments, Rosters, and OJSs for FIRST LEGO League. Regional leadership uses this to create tournament folders (with improved OJS files) for each tournament. Think of MAESTRO as orchestrating and coordinating all tournaments in a region.
+- **TOAST**: Tournament OJS And Script Toolkit for FIRST LEGO League. Tournament directors and judge advisors use this to validate OJS entries and generate closing ceremony scripts. Think of TOAST as the entry point to the celebration after the tournament.
 
 ## Maestro Features
 
 - **Tournament Folder Builder**: Automatically creates tournament folders (select one or all tournaments at once) and populates OJS spreadsheets with team assignments
 - **Comprehensive Validation**: Checks tournament assignments, award definitions and allocations before building tournament folders
-- **Custom awards**: Supports addition of any custom awards as needed
+- **Custom awards**: Supports adding any custom awards as needed
 - **Other outputs**: Generates printable blank "fill-in" forms for hand-writing awardees
 - **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
 - **Inputs**: Uses an easy-to-understand excel spreadsheet for all tournaments and teams assigned to those tournaments. Spreadsheet also allocates awards per tournament. Also uses a single json file for overall season configuration.
@@ -30,36 +30,35 @@ Includes two tools for tournament management:
 - **Closing Ceremony Script Generator**: Validates OJS data and generates HTML ceremony scripts with award winners
 - **Dual Emcee Support**: Optional alternating color highlighting for two emcees reading the ceremony script
 - **Comprehensive Validation**: Checks scores, ranges, and award allocations before ceremony script generation
-- **Custom awards**: Supports addition of any custom awards as needed
+- **Custom awards**: Supports adding any custom awards as needed
 - **Other outputs**: Generates simplified HTML summaries
 - **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
 
 
 ## Installation
 
-As a regional tournament manager, or program delivery partner, simply copy the files from this repo into a folder of your choice. Most testing has been done on Windows, but executables are included for MacOS. As a tournament director or judge advisor for a single tournament, you will be given a link to download your ready-to-use OJS(s) and TOAST software
+As a regional tournament manager or program delivery partner, copy the files from this repo into a folder of your choice. Most testing has been done on Windows, but executables are included for macOS. As a tournament director or judge advisor for a single tournament, you will receive a link to download your ready-to-use OJS files and TOAST software.
 
 ## Usage
 
 ### Tournament Folder Builder (MAESTRO)
 
-Once you have downloaded the files in this repo, you will have some editing to do.  
-See the configuration section below to edit the season.json file.  
-Edit the tournament excel spreadsheet (file name is configured in the season.json file). There are several important worksheets that will need updating to suit your region's needs. There are instructions on the worksheets which should help you get started.  
-You will also want to edit the jinja template files using any text editor such as Notepad, Notepad++, or VS Code. The closing ceremony script is probably the most important one, so make sure it has the verbiage you need. If you have any custom awards, you will want to include them here.  
-Once you have everything edited and saved (be sure to exit out of the workbook), you can run fll-maestro.exe from the same folder. Type in the name of a single tournament, or press enter to build all tournaments. Pay attention for any warnings or errors.  
-If everything built correctly and you have no changes to make, move the folders to some cloud-based file sharing platform such as OneDrive, Google Drive or Dropbox. Get a sharing link to the folders and share the link with your tournament directors and judge advisors.  
+Once you download the repo, do the following:
+1) Edit `season.json` (see Configuration below).
+2) Edit the tournament Excel workbook (name is set in `season.json`). Update the worksheets per your region; in-sheet instructions are provided.
+3) Edit the Jinja template files (closing ceremony, summary, fill-in) with your preferred wording and any custom awards.
+4) Close the Excel workbook, then run `fll-maestro.exe` (or `python fll-maestro.py`) from the same folder. Enter a tournament name to build one, or press ENTER to build all. Watch for warnings/errors.
+5) When builds succeed, share the generated tournament folders via your preferred cloud service (OneDrive, Google Drive, Dropbox) with tournament directors and judge advisors.
 
 ### OJS usage
 
-Review the included toast-instructions.pdf for detailed instructions for each worksheet. Two important details: 1) You must use the desktop version of Excel. There will be significant feature reduction if using the cloud version of Excel. 2) enable macros when opening spreadsheet.  
-When you are done entering scores and choosing awards/advancing teams, save and close the workbook. You can now run fll-toast.exe.  
+Review the included toast-instructions.pdf for worksheet details. Two important requirements: (1) use the desktop version of Excel (cloud Excel disables critical features); (2) enable macros when opening the spreadsheet.  
+When you finish entering scores, awards, and advancing teams, save and close the workbook, then run `fll-toast.exe` (or `python fll-toast.py`).  
 
 ### Closing Ceremony Script Generator (TOAST)
 
-Running fll-toast.exe does several important things. First it will validate the entries on all of the worksheets. Did you miss a cell and leave it blank? Or enter a number that doesn't make sense (like a 6 in judging cell). Did you forget to assign an award that was allocated for your tournament? If any of these are found in the validation, a warning message will appear or if the error is severe, the program will exit and you will have to fix the error before proceeding. Warnings will generally continue with execution, but serve as a reminder to double-check the entries and results.  
-If everything is ok and no errors were found, you should have a couple of new html files. The first one is the closing ceremony script. You can email it to the emcees where they could perhaps read it off a tablet or cell phone, or you can open it on a laptop that you will take to the ceremony.  
-If you have two emcees, you might want to try the highlighting feature which will color every-other-row in the script to make it easier for them to follow along. Look for the cell on the Team and Program Information worksheet to enable highlighting.
+Running TOAST validates every worksheet entry (missing scores, out-of-range judging values, unassigned allocated awards, etc.). Warnings allow you to continue but remind you to double-check; severe errors require fixing and re-running.
+On success, TOAST produces two HTML files: the closing ceremony script and a summary. Share with emcees (tablet/phone) or use on a laptop at the ceremony. If you have two emcees, enable the dual-emcee highlighting (Team and Program Information sheet, cell F2) to alternate colors every other paragraph.
 
 ## Configuration
 
@@ -119,13 +118,13 @@ Edit `season.json` to configure:
 Log files are automatically created with timestamps in the script directory:
 
 ### Tournament Builder Logs
-- **Format**: `tournament_builder_YYYYMMDD_HHMMSS.log`
+- **Format**: `ojs_builder_YYYYMMDD_HHMMSS.log`
 - **Location**: Repository directory (beside the scripts)
 - **Contents**: Full debug information (even in quiet mode)
 
 ### Ceremony Generator Logs
 - **Format**: `ceremony_generator_YYYYMMDD_HHMMSS.log`
-- **Location**: Repository directory (TOAST always logs next to `fll-toast.py`)
+- **Location**: Repository directory (TOAST logs next to `fll-toast.py`)
 - **Contents**: Validation results, data collection, and rendering details
 
 
@@ -178,12 +177,12 @@ Log files are automatically created with timestamps in the script directory:
 ### Getting Help
 
 1. **Check the log file** - Contains detailed error information
-   - Tournament builder: `tournament_builder_YYYYMMDD_HHMMSS.log`
-   - Ceremony generator: `ceremony_generator_YYYYMMDD_HHMMSS.log`
+  - Tournament builder: `ojs_builder_YYYYMMDD_HHMMSS.log`
+  - Ceremony generator: `ceremony_generator_YYYYMMDD_HHMMSS.log`
 2. **Run with `--verbose` or `--debug`** - Shows step-by-step execution
 3. **Use `--interactive`** - See validation summary before processing (builder only)
 4. **Review error suggestions** - Scripts provide recovery steps for common issues
 
 ## Development
 
-Are you comfortable editing python programs? If so, and you feel like there is some functionality missing from MAESTRO or TOAST, then feel free to clone this repo and make your own changes. We have a page here with some more details about what's going on behind the scenes.
+Comfortable editing Python? Clone the repo and extend MAESTRO or TOAST as needed. Use the module structure and templates as your starting point.
