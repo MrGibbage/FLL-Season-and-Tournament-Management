@@ -1,3 +1,12 @@
+try:
+    from version import __version__
+except ImportError:
+    __version__ = "dev"
+
+    print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
+    logger = setup_logger("maestro_builder", debug=True)
+    logger.info(f"MAESTRO version: {__version__}")
+
 """Utility to prepare per-tournament folders and populate OJS spreadsheets.
 
 This script reads a season manifest (`season.json`) and a master
@@ -368,6 +377,22 @@ def cleanup_tournament_folders(tournament_folder: str, tournaments_to_process: l
     return stats
 
 
+def resolve_fillin_template_filename(
+    config: dict,
+    using_divisions: bool,
+    default_divisions: str = "champ_fillin_template-with-divisions.html.jinja",
+    default_no_divisions: str = "fillin_template.html.jinja",
+) -> str:
+    """Pick the fill-in template filename from season config, with sensible fallbacks."""
+    # Prefer the explicit season-level fillin_template entry
+    if config:
+        cfg_value = config.get("fillin_template")
+        if cfg_value:
+            return cfg_value
+
+    return default_divisions if using_divisions else default_no_divisions
+
+
 def main():
     """Main execution function."""
     args = parse_arguments()
@@ -687,11 +712,12 @@ def main():
 
             # Select template based on divisions - this is an early/simple render
             # The more detailed render happens after tournament_config.json is created
-            if using_divisions:
-                # For championships with divisions, use the championship template
-                fillin_template_file = "champ_fillin_template-with-divisions.html.jinja"
-            else:
-                fillin_template_file = "fillin_template.html.jinja"
+            fillin_template_file = resolve_fillin_template_filename(
+                config,
+                using_divisions,
+                default_divisions="champ_fillin_template-with-divisions.html.jinja",
+                default_no_divisions="fillin_template.html.jinja",
+            )
 
             fillin_output = os.path.join(newpath, "fillin_form.html")
 
@@ -750,8 +776,7 @@ def main():
             set_up_meta_worksheet(row, ojs_book, config, tournament_folder, using_divisions)
             progress.update("Metadata added")
 
-            copy_award_def(row, ojs_book, dfAwardDef)
-            progress.update("Formatting applied")
+            # Skipping copy_award_def: AwardDef table is not used by downstream tools
 
             hide_worksheets(row, ojs_book)
             progress.update("Worksheets hidden")
@@ -806,12 +831,15 @@ def main():
                 awards_cfg = tourn_config.get("AWARDS", [])
                 using_divs = info_section.get("using_divisions", False)
 
-                # Select template based on divisions
-                if using_divs:
-                    # For championships with divisions, use the championship template
-                    fillin_template_file = "champ_fillin_template-with-divisions.html.jinja"
-                else:
-                    fillin_template_file = "fillin_template.html.jinja"
+                # Select template based on divisions, preferring filenames from config
+                fillin_template_file = info_section.get("fillin_template")
+                if not fillin_template_file:
+                    fillin_template_file = resolve_fillin_template_filename(
+                        config,
+                        using_divs,
+                        default_divisions="champ_fillin_template-with-divisions.html.jinja",
+                        default_no_divisions="fillin_template.html.jinja",
+                    )
 
                 fillin_output = os.path.join(newpath, "fillin_form.html")
 

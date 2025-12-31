@@ -19,8 +19,12 @@ import warnings
 import argparse
 from colorama import init, Fore, Style
 
+
 # Application version. Override at build/run via TOAST_VERSION environment variable.
-__version__ = "0.9.1"
+try:
+    from version import __version__
+except ImportError:
+    __version__ = "dev"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)

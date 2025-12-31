@@ -17,5 +17,11 @@
 - Introduced TOAST to validate OJS data (scores, awards, allocations) and render ceremony script/summary HTML outputs.
 - Added template-driven ceremony outputs with division/non-division support and dual-emcee highlighting.
 
+
+## 0.9.2
+- MAESTRO no longer writes the AwardDef table to OJS workbooks (AwardDef is unused by TOAST and downstream tools).
+- Eliminated warnings about extra label columns in AwardDef.
+- Version bump to 0.9.2.
+
 ## Unreleased / Next
 - (Add new entries here as changes are made.)

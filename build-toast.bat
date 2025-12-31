@@ -1,9 +1,13 @@
 @echo off
 setlocal
 
+
 rem Derive version from git; falls back to commit hash if no tags.
 for /f "usebackq tokens=* delims=" %%v in (`git describe --tags --dirty --always`) do set TOAST_VERSION=%%v
 if "%TOAST_VERSION%"=="" set TOAST_VERSION=unknown
+
+rem Stamp version.py for unified versioning
+echo __version__ = "%TOAST_VERSION%" > version.py
 
 echo Building TOAST version %TOAST_VERSION%
 

@@ -1,0 +1,49 @@
+<!--
+  CEREMONY SUMMARY TEMPLATE - DIVISION TOURNAMENTS
+
+  This template is used for tournaments WITH divisions.
+  When MAESTRO builds a tournament folder, it automatically:
+  - Copies this file if using_divisions = False
+  - OR copies summary_template-with-divisions.html.jinja if using_divisions = True
+  - The copied file is always named 'summary_template.html.jinja' in the tournament folder
+
+  TOAST (ceremony script generator) can optionally use 'summary_template.html.jinja'
+  to generate a simplified summary with just award winners (no ceremony script text).
+
+  Expected variables for non-division events:
+  - Required: tournament_name
+  - Award HTML fragments: P_AWD_RG, J_AWD_IP, J_AWD_RD, J_AWD_CV, J_AWD_Judges, J_AWD_Foo, J_AWD_CHAMP
+  - Advancing list: ADV (HTML)
+-->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{{ tournament_name }} Summary</title>
+    </head>
+    <body>
+        <h1>{{ tournament_name }} Summary</h1>
+
+        <!-- Robot Game Scores -->
+        <h2>Robot Performance Awards</h2>
+        {{ P_AWD_RG_D1|safe }} {{ P_AWD_RG_D2|safe }}
+
+        <h2>Innovation Project Awards</h2>
+        {{ J_AWD_IP_D1|safe }} {{ J_AWD_IP_D2|safe }}
+
+        <h2>Robot Design Award</h2>
+        {{ J_AWD_RD_D1|safe }} {{ J_AWD_RD_D2|safe }}
+
+        <h2>Core Values Award</h2>
+        {{ J_AWD_CV_D1|safe }} {{ J_AWD_CV_D2|safe }}
+
+        <h2>Judge's Award</h2>
+        {{ J_AWD_Judges|safe }}
+
+        <h2>Champion's Award</h2>
+        {{ J_AWD_CHAMP_D1|safe }} {{ J_AWD_CHAMP_D2|safe }}
+
+        <h2>Advancing Teams</h2>
+        <p><span class="highlight0">The teams that are advancing are</span></p>
+        {{ ADV_D1|safe }} {{ ADV_D2|safe }}
+    </body>
+</html>

@@ -256,11 +256,15 @@ def generate_tournament_config(
     else:
         file_list = config.get("copy_file_list_no_divisions_only", [])
 
-    # Extract template destination filenames based on "type" field
+    # Extract template destination filenames based on "type" field (script/summary only)
     for file_entry in file_list:
         file_type = file_entry.get("type", "")
-        if file_type in ["script_template", "summary_template", "fillin_template"]:
+        if file_type in ["script_template", "summary_template"]:
             template_filenames[file_type] = file_entry.get("dest", "")
+
+    # Add fill-in template filename from season-level key (not copied)
+    if config.get("fillin_template"):
+        template_filenames["fillin_template"] = config.get("fillin_template")
 
     logger.info(f"Generating tournament config for {tournament[COL_SHORT_NAME]}")
 
