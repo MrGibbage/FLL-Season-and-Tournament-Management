@@ -32,3 +32,12 @@ Thumbs.db
 
 # Tournament folders
 tournaments/
+
+# Build artifacts and exes
+fll-maestro.exe
+fll-toast.exe
+dist/
+dist/**
+build/
+build/**
+version.py
