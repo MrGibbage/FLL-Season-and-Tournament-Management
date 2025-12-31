@@ -435,12 +435,15 @@ def main():
         "ADV_D2",
         "ip_this_these",
         "rd_this_these",
-        "ja_count",
         "ja_go_goes",
     ]
     for var in expected_vars:
         if var not in template_data:
             template_data[var] = ""
+
+    # Set ja_count to 0 if not already set (must be int for template comparison)
+    if "ja_count" not in template_data:
+        template_data["ja_count"] = 0
 
     print_success(f"Collected data for {len(template_data)} template variables")
 
@@ -456,8 +459,39 @@ def main():
     output_files = []
 
     print(f"{Fore.CYAN}Rendering ceremony script...{Style.RESET_ALL}")
-    script_template_file = "script_template.html.jinja"
-    critical_vars = {"J_AWD_CHAMP_D1", "J_AWD_CHAMP_D2", "ADV_D1", "ADV_D2"}
+
+    # Get script template filename from config, with fallback to default
+    script_template_file = info.get("script_template", "script_template.html.jinja")
+    logger.debug(f"Using script template: {script_template_file}")
+
+    # Determine critical variables based on actual divisions present
+    if using_divisions:
+        # Check which divisions actually have OJS files by examining filenames
+        has_d1 = any("D1" in filename.upper() for filename in ojs_filenames)
+        has_d2 = any("D2" in filename.upper() for filename in ojs_filenames)
+
+        critical_vars = set()
+        if has_d1:
+            critical_vars.update({"J_AWD_CHAMP_D1", "ADV_D1"})
+        if has_d2:
+            critical_vars.update({"J_AWD_CHAMP_D2", "ADV_D2"})
+
+        # Log which divisions are present
+        if has_d1 and has_d2:
+            logger.info("Both divisions present - D1 and D2 variables required")
+        elif has_d1:
+            logger.info("Single-division tournament detected - only D1 variables required")
+            print(
+                f"{Fore.CYAN}Note: Only Division 1 present - D2 variables optional{Style.RESET_ALL}"
+            )
+        elif has_d2:
+            logger.info("Single-division tournament detected - only D2 variables required")
+            print(
+                f"{Fore.CYAN}Note: Only Division 2 present - D1 variables optional{Style.RESET_ALL}"
+            )
+    else:
+        critical_vars = set()  # Non-division tournaments have no critical division vars
+
     errors, warnings = renderer.validate_template_variables(
         script_template_file, template_data, critical_vars
     )
@@ -488,7 +522,11 @@ def main():
         all_success = False
 
     print(f"\n{Fore.CYAN}Rendering ceremony summary...{Style.RESET_ALL}")
-    summary_template_file = "summary_template.html.jinja"
+
+    # Get summary template filename from config, with fallback to default
+    summary_template_file = info.get("summary_template", "summary_template.html.jinja")
+    logger.debug(f"Using summary template: {summary_template_file}")
+
     errors, warnings = renderer.validate_template_variables(
         summary_template_file, template_data, set()
     )

@@ -44,11 +44,16 @@ As a regional tournament manager or program delivery partner, copy the files fro
 ### Tournament Folder Builder (MAESTRO)
 
 Once you download the repo, do the following:
-1) Edit `season.json` (see Configuration below).
-2) Edit the tournament Excel workbook (name is set in `season.json`). Update the worksheets per your region; in-sheet instructions are provided.
+1) Create one or more season configuration JSON files (e.g., `qualifiers.json`, `championship.json`) in the MAESTRO directory. See Configuration section below for required keys.
+2) Edit the tournament Excel workbook (name is set in your configuration file). Update the worksheets per your region; in-sheet instructions are provided.
 3) Edit the Jinja template files (closing ceremony, summary, fill-in) with your preferred wording and any custom awards.
-4) Close the Excel workbook, then run `fll-maestro.exe` (or `python fll-maestro.py`) from the same folder. Enter a tournament name to build one, or press ENTER to build all. Watch for warnings/errors.
-5) When builds succeed, share the generated tournament folders via your preferred cloud service (OneDrive, Google Drive, Dropbox) with tournament directors and judge advisors.
+4) Close the Excel workbook, then run `fll-maestro.exe` (or `python fll-maestro.py`) from the same folder.
+   - If you have only one valid configuration file, MAESTRO will automatically use it
+   - If you have multiple configuration files, you'll see a numbered list to choose from
+5) Enter a tournament name to build one, or press ENTER to build all. Watch for warnings/errors.
+6) When builds succeed, share the generated tournament folders via your preferred cloud service (OneDrive, Google Drive, Dropbox) with tournament directors and judge advisors.
+
+**Note**: MAESTRO automatically scans for all `.json` files and validates them. Only files containing the required configuration keys (`season_yr`, `season_name`, `tournament_folder`, `filename`, `tournament_template`) will be shown as options.
 
 ### OJS usage
 
@@ -62,7 +67,20 @@ On success, TOAST produces two HTML files: the closing ceremony script and a sum
 
 ## Configuration
 
-Edit `season.json` to configure:
+MAESTRO supports multiple configuration files to manage different tournament types (e.g., qualifiers and championships). Create one or more JSON configuration files in the MAESTRO directory:
+
+**Example files:**
+- `qualifiers.json` - for qualifier tournaments
+- `championship.json` - for championship tournaments  
+- `season.json` - traditional single configuration
+
+When you run MAESTRO:
+- If only **one** valid configuration file exists → automatically selected
+- If **multiple** valid files exist → you'll see a numbered list to choose from
+
+### Configuration File Format
+
+Each configuration file should follow this structure:
 
 ```json
 {
@@ -77,22 +95,34 @@ Edit `season.json` to configure:
     {"source": "instructions.pdf", "dest": "instructions.pdf"}
   ],
   "copy_file_list_divisions_only": [
-    {"source": "script_template-with-divisions.html.jinja", "dest": "script_template.html.jinja"},
-    {"source": "summary_template-with-divisions.html.jinja", "dest": "summary_template.html.jinja"}
+    {"type": "script_template", "source": "script_template-with-divisions.html.jinja", "dest": "script_template.html.jinja"},
+    {"type": "summary_template", "source": "summary_template-with-divisions.html.jinja", "dest": "summary_template.html.jinja"},
+    {"type": "fillin_template", "source": "fillin_template-with-divisions.html.jinja", "dest": "fillin_template.html.jinja"}
   ],
   "copy_file_list_no_divisions_only": [
-    {"source": "script_template.html.jinja", "dest": "script_template.html.jinja"},
-    {"source": "summary_template.html.jinja", "dest": "summary_template.html.jinja"}
+    {"type": "script_template", "source": "script_template.html.jinja", "dest": "script_template.html.jinja"},
+    {"type": "summary_template", "source": "summary_template.html.jinja", "dest": "summary_template.html.jinja"},
+    {"type": "fillin_template", "source": "fillin_template.html.jinja", "dest": "fillin_template.html.jinja"}
   ]
 }
 ```
 
 ### Configuration Keys
 
+**Required keys** (MAESTRO validates these):
 - `season_yr`: Tournament season year
 - `season_name`: FLL season theme name
 - `filename`: Excel file with tournament list and assignments
 - `tournament_template`: OJS template file to copy
+- `tournament_folder`: Root folder where tournament subfolders will be created
+
+**Optional keys**:
+- `copy_file_list_common`: Files always copied to every tournament folder
+- `copy_file_list_divisions_only`: Files only copied when `using_divisions=True`
+- `copy_file_list_no_divisions_only`: Files only copied when `using_divisions=False`
+- `copy_file_list`: Additional files to copy to each tournament folder
+
+**Details:**
 - `tournament_folder`: **Root folder where tournament subfolders will be created**
   - **IMPORTANT**: Use forward slashes `/` in paths (works on all platforms)
   - Will be created automatically if it doesn't exist
@@ -107,9 +137,15 @@ Edit `season.json` to configure:
 - `copy_file_list_divisions_only`: Files only copied when `using_divisions=True`
   - Typically includes division-specific templates (e.g., `script_template-with-divisions.html.jinja`)
   - Source and dest can differ to provide consistent naming in tournament folders
+  - **Optional `type` field**: Use `"type": "script_template"`, `"summary_template"`, or `"fillin_template"` to indicate template files
+  - MAESTRO writes template filenames to `tournament_config.json` for TOAST to use
 - `copy_file_list_no_divisions_only`: Files only copied when `using_divisions=False`
   - Typically includes non-division templates (e.g., `script_template.html.jinja`)
   - Allows TOAST to always use the same filenames regardless of division setting
+  - **Optional `type` field**: Same as above - identifies template files for TOAST
+  - **TOAST Fallback**: If template filenames are not in `tournament_config.json`, TOAST defaults to:
+    - `script_template.html.jinja` for ceremony scripts
+    - `summary_template.html.jinja` for ceremony summaries
   - ⚠️ **Don't use backslashes** `\` - they require escaping in JSON as `\\`
 - `copy_file_list`: Additional files to copy to each tournament folder
 

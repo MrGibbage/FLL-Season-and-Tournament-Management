@@ -42,7 +42,7 @@ class CeremonyRenderer:
             template_filename: Name of template file
 
         Returns:
-            Set of variable names found in template
+            Set of variable names found in template (excluding loop variables)
         """
         try:
             with open(f"{self.template_dir}/{template_filename}", "r", encoding="utf-8") as f:
@@ -52,7 +52,16 @@ class CeremonyRenderer:
             pattern = r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\|[^}]*)?\}\}"
             variables = set(re.findall(pattern, content))
 
+            # Extract loop variables defined in {% for var in ... %} statements
+            loop_var_pattern = r"\{%\s*for\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+in\s+"
+            loop_vars = set(re.findall(loop_var_pattern, content))
+
+            # Exclude loop variables from the variables set
+            variables = variables - loop_vars
+
             logger.debug(f"Found {len(variables)} variables in template: {sorted(variables)}")
+            if loop_vars:
+                logger.debug(f"Excluded {len(loop_vars)} loop variables: {sorted(loop_vars)}")
             return variables
         except Exception as e:
             logger.error(f"Error extracting template variables: {e}")

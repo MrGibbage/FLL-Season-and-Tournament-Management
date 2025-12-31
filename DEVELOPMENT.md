@@ -124,3 +124,52 @@ FLL-Season-and-Tournament-Management/
         ├── script_maker-mac
         └── ...
 ```
+
+## Template File Handling
+
+### How Template Filenames Work
+
+MAESTRO and TOAST use a dynamic template filename system that allows different template files for division vs non-division tournaments:
+
+1. **Season Config (qualifiers.json / championship.json)**:
+   - In the `copy_file_list_divisions_only` and `copy_file_list_no_divisions_only` arrays, add a `"type"` field to template files:
+     ```json
+     {
+       "type": "script_template",
+       "source": "champ_script_template-with-divisions.html.jinja",
+       "dest": "champ_script_template.html.jinja"
+     }
+     ```
+   - Valid type values: `"script_template"`, `"summary_template"`, `"fillin_template"`
+
+2. **MAESTRO Processing**:
+   - Reads the copy file lists and extracts entries with a `"type"` field
+   - Writes the destination filename to `tournament_config.json` INFO section
+   - Example: `"script_template": "champ_script_template.html.jinja"`
+
+3. **TOAST Processing**:
+   - Reads template filenames from `tournament_config.json` INFO section
+   - **Fallback behavior**: If keys are missing, defaults to:
+     - `script_template.html.jinja` for ceremony scripts
+     - `summary_template.html.jinja` for ceremony summaries
+   - This ensures backward compatibility and graceful degradation
+
+### Example Flow
+
+```
+championship.json (divisions_only):
+  {"type": "script_template", "source": "champ_script-div.html.jinja", "dest": "champ_script.html.jinja"}
+          ↓ MAESTRO copies file and writes config
+tournament_config.json (INFO):
+  "script_template": "champ_script.html.jinja"
+          ↓ TOAST reads config
+Uses: champ_script.html.jinja (or falls back to script_template.html.jinja if not found)
+```
+
+To create a windows executable file, 
+first install pyinstaller, with
+pip install pyinstaller
+then run
+.venv\Scripts\pyinstaller.exe -F fll-toast.py
+.venv\Scripts\pyinstaller.exe -F fll-maestro.py
+Then copy the .exe file(s) from dist to the project root. Be sure to include fll-toast.exe in the files to be copied entries in the season json config file.
