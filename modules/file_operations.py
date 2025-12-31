@@ -279,6 +279,10 @@ def generate_tournament_config(
         existing_config = None
 
     current_div = tournament.get(COL_DIVISION, "") if using_divisions else ""
+    if isinstance(current_div, str):
+        current_div = current_div.strip().upper()
+        if current_div and not current_div.startswith("D"):
+            current_div = f"D{current_div}"
 
     raw_adv_count = tournament.get(COL_ADVANCING, 0)
     try:
@@ -295,15 +299,16 @@ def generate_tournament_config(
         else:
             tourn_date = str(tourn_date)
 
-        # Determine OJS filenames for this tournament
-        if using_divisions:
-            # Get both division rows for this tournament
-            ojs_filenames = []
-            div1_filename = tournament.get(COL_OJS_FILENAME)
-            if div1_filename and not pd.isna(div1_filename):
-                ojs_filenames.append(div1_filename)
-        else:
-            ojs_filenames = [tournament[COL_OJS_FILENAME]]
+        # Determine OJS files for this tournament
+        ojs_files = []
+        current_filename = tournament.get(COL_OJS_FILENAME)
+        if current_filename and not pd.isna(current_filename):
+            ojs_files.append(
+                {
+                    "division": current_div,
+                    "filename": current_filename,
+                }
+            )
 
         # Read dual_emcee flag from OJS file(s) - TRUE if ANY OJS has it set to TRUE
         dual_emcee = False
@@ -316,7 +321,7 @@ def generate_tournament_config(
             "tournament_date": tourn_date,
             "using_divisions": using_divisions,
             "dual_emcee": dual_emcee,  # Will be updated below
-            "ojs_filenames": ojs_filenames,
+            "ojs_files": ojs_files,
         }
 
         # Add template filenames to INFO section
@@ -328,8 +333,12 @@ def generate_tournament_config(
         info_section = existing_config.get("INFO", {})
         current_ojs = tournament.get(COL_OJS_FILENAME)
         if current_ojs and not pd.isna(current_ojs):
-            if current_ojs not in info_section.get("ojs_filenames", []):
-                info_section.setdefault("ojs_filenames", []).append(current_ojs)
+            ojs_list = info_section.setdefault("ojs_files", [])
+            if not any(
+                (item.get("filename") == current_ojs and item.get("division") == current_div)
+                for item in ojs_list
+            ):
+                ojs_list.append({"division": current_div, "filename": current_ojs})
 
     # Read dual_emcee from current OJS file (cell F2 on Team and Program Information sheet)
     current_ojs_path = os.path.join(tournament_folder, tourn_short, tournament[COL_OJS_FILENAME])

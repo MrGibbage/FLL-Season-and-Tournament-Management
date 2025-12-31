@@ -19,6 +19,9 @@ import warnings
 import argparse
 from colorama import init, Fore, Style
 
+# Application version. Override at build/run via TOAST_VERSION environment variable.
+__version__ = "0.9.0"
+
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)
 
@@ -53,6 +56,14 @@ def print_splash():
     )
     print(f"{Fore.YELLOW}█{Style.RESET_ALL}{'  ' * 35}{Fore.YELLOW}█{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}{'█' * 72}{Style.RESET_ALL}\n")
+
+
+def resolve_version() -> str:
+    """Return the runtime version string."""
+    env_version = os.environ.get("TOAST_VERSION", "").strip()
+    if env_version:
+        return env_version
+    return __version__
 
 
 def print_header(text: str):
@@ -97,10 +108,11 @@ def load_config(config_path: str) -> dict:
     return None
 
 
-def generate_output_filename(ojs_filenames: list, suffix: str = "closing-ceremony") -> str:
-    """Generate output filename based on OJS filenames."""
-    base_name = ojs_filenames[0]
-    base_name = base_name.replace("-div1.xlsm", "").replace("-div2.xlsm", "").replace(".xlsm", "")
+def generate_output_filename(ojs_files: list, suffix: str = "closing-ceremony") -> str:
+    """Generate output filename based on the first OJS filename."""
+    first = ojs_files[0]
+    filename = first["filename"] if isinstance(first, dict) else str(first)
+    base_name = filename.replace("-div1.xlsm", "").replace("-div2.xlsm", "").replace(".xlsm", "")
     output_name = f"{base_name}-{suffix}.html"
     logger.debug(f"Generated output filename: {output_name}")
     return output_name
@@ -131,6 +143,8 @@ def main():
     """Main execution function."""
     args = parse_arguments()
 
+    version = resolve_version()
+
     if args.debug:
         log_debug = True
     elif args.verbose:
@@ -139,6 +153,7 @@ def main():
         log_debug = False  # Default (WARNING level in setup_logger when debug=False)
 
     print_splash()
+    print(f"{Fore.CYAN}TOAST version:{Style.RESET_ALL} {version}")
 
     if getattr(sys, "frozen", False):
         script_dir = os.path.dirname(sys.executable)
@@ -155,6 +170,7 @@ def main():
 
     global logger
     logger = setup_logger("ceremony_generator", debug=log_debug, log_dir=script_dir)
+    logger.info(f"TOAST version: {version}")
 
     if args.debug:
         logger.info("Debug logging enabled")
@@ -179,18 +195,49 @@ def main():
 
     info = config["INFO"]
 
-    required_info_keys = ["using_divisions", "ojs_filenames", "tournament_long_name"]
+    required_info_keys = ["using_divisions", "ojs_files", "tournament_long_name"]
     missing_info = [key for key in required_info_keys if key not in info]
     if missing_info:
         print_error(logger, f"Missing required INFO key(s): {', '.join(missing_info)}")
         sys.exit(1)
 
     using_divisions = info["using_divisions"]
-    ojs_filenames = info["ojs_filenames"]
+
+    def normalize_ojs_files(raw_list):
+        normalized = []
+        if not isinstance(raw_list, list):
+            print_error(
+                logger, "INFO.ojs_files must be a list of objects with filename and division"
+            )
+        for idx, entry in enumerate(raw_list):
+            if isinstance(entry, dict):
+                filename = entry.get("filename")
+                division = entry.get("division") or entry.get("div") or ""
+            else:
+                filename = str(entry)
+                division = f"D{idx + 1}" if using_divisions else ""
+
+            if not filename:
+                print_error(logger, f"INFO.ojs_files[{idx}] is missing a filename")
+
+            div_str = "" if division is None else str(division).strip()
+            if div_str:
+                div_str = div_str.upper()
+                if not div_str.startswith("D"):
+                    div_str = f"D{div_str}"
+
+            normalized.append({"division": div_str, "filename": filename})
+
+        if not normalized:
+            print_error(logger, "INFO.ojs_files is empty")
+        return normalized
+
+    ojs_files = normalize_ojs_files(info["ojs_files"])
 
     # Derive dual emcee highlighting from Team and Program Information!F2 in any OJS
     dual_emcee = False
-    for ojs_file in ojs_filenames:
+    for entry in ojs_files:
+        ojs_file = entry["filename"]
         ojs_path = os.path.join(base_dir, ojs_file)
         if os.path.exists(ojs_path):
             try:
@@ -221,11 +268,12 @@ def main():
 
     print(f"{Fore.CYAN}Tournament:{Style.RESET_ALL} {info['tournament_long_name']}")
     print(f"{Fore.CYAN}Using divisions:{Style.RESET_ALL} {using_divisions}")
-    print(f"{Fore.CYAN}OJS files:{Style.RESET_ALL} {len(ojs_filenames)}")
+    print(f"{Fore.CYAN}OJS files:{Style.RESET_ALL} {len(ojs_files)}")
     print(f"{Fore.CYAN}Dual emcee:{Style.RESET_ALL} {dual_emcee}")
 
     print_header("VALIDATING OJS FILES")
-    for ojs_file in ojs_filenames:
+    for entry in ojs_files:
+        ojs_file = entry["filename"]
         ojs_path = os.path.join(base_dir, ojs_file)
         if os.path.exists(ojs_path):
             print_success(f"Found: {ojs_file}")
@@ -234,11 +282,14 @@ def main():
 
     print_header("VALIDATING OJS DATA")
     validator = OJSValidator()
-    for idx, ojs_file in enumerate(ojs_filenames):
+    for idx, entry in enumerate(ojs_files):
+        ojs_file = entry["filename"]
+        division_label = entry.get("division") or f"Division {idx + 1}" if using_divisions else ""
         ojs_path = os.path.join(base_dir, ojs_file)
-        division = f"Division {idx + 1}" if using_divisions else ""
-        print(f"\n{Fore.YELLOW}Validating {ojs_file}...{Style.RESET_ALL}")
-        validator.validate_all_sheets(ojs_path, division)
+        print(
+            f"\n{Fore.YELLOW}Validating {ojs_file} ({division_label or 'No Division'})...{Style.RESET_ALL}"
+        )
+        validator.validate_all_sheets(ojs_path, division_label)
 
     if validator.has_errors():
         print(f"\n{Fore.RED}{'═' * 70}{Style.RESET_ALL}")
@@ -278,34 +329,52 @@ def main():
     template_data["dual_emcee"] = dual_emcee
     template_data["awards_config"] = config["AWARDS"]
 
+    division_entries = []
+    for idx, entry in enumerate(ojs_files):
+        code = entry.get("division") or (f"D{idx + 1}" if using_divisions else "")
+        code = code.upper() if code else ""
+        if code and not code.startswith("D"):
+            code = f"D{code}"
+        label = ""
+        if using_divisions:
+            if code:
+                label = f"Division {code[1:]}" if code.startswith("D") else f"Division {code}"
+            else:
+                label = f"Division {idx + 1}"
+        else:
+            label = "Tournament"
+
+        division_entries.append(
+            {
+                "code": code,
+                "label": label,
+                "filename": entry["filename"],
+                "path": os.path.join(base_dir, entry["filename"]),
+            }
+        )
+
     print("Collecting team lists...")
     if using_divisions:
-        div1_teams = collector.collect_team_list(
-            os.path.join(base_dir, ojs_filenames[0]), "Division 1"
-        )
-        template_data["div1_list"] = collector.format_team_list_as_html(div1_teams)
-        if len(ojs_filenames) > 1:
-            div2_teams = collector.collect_team_list(
-                os.path.join(base_dir, ojs_filenames[1]), "Division 2"
-            )
-            template_data["div2_list"] = collector.format_team_list_as_html(div2_teams)
+        for entry in division_entries:
+            teams = collector.collect_team_list(entry["path"], entry["label"])
+            if entry["code"] == "D1":
+                template_data["div1_list"] = collector.format_team_list_as_html(teams)
+            elif entry["code"] == "D2":
+                template_data["div2_list"] = collector.format_team_list_as_html(teams)
     else:
-        all_teams = collector.collect_team_list(os.path.join(base_dir, ojs_filenames[0]))
+        all_teams = collector.collect_team_list(division_entries[0]["path"])
         template_data["team_list"] = collector.format_team_list_as_html(all_teams)
 
     print("Collecting advancing teams...")
     if using_divisions:
-        adv_d1 = collector.collect_advancing_teams(
-            os.path.join(base_dir, ojs_filenames[0]), "Division 1"
-        )
-        template_data["ADV_D1"] = collector.format_team_list_as_html(adv_d1)
-        if len(ojs_filenames) > 1:
-            adv_d2 = collector.collect_advancing_teams(
-                os.path.join(base_dir, ojs_filenames[1]), "Division 2"
-            )
-            template_data["ADV_D2"] = collector.format_team_list_as_html(adv_d2)
+        for entry in division_entries:
+            adv = collector.collect_advancing_teams(entry["path"], entry["label"])
+            if entry["code"] == "D1":
+                template_data["ADV_D1"] = collector.format_team_list_as_html(adv)
+            elif entry["code"] == "D2":
+                template_data["ADV_D2"] = collector.format_team_list_as_html(adv)
     else:
-        adv_teams = collector.collect_advancing_teams(os.path.join(base_dir, ojs_filenames[0]))
+        adv_teams = collector.collect_advancing_teams(division_entries[0]["path"])
         template_data["ADV"] = collector.format_team_list_as_html(adv_teams)
 
     print("Collecting award winners...")
@@ -317,33 +386,24 @@ def main():
 
         if award_id == "P_AWD_RG":
             if using_divisions and is_div_award:
-                d1_count = int(award.get("D1_count", 0))
-                if d1_count > 0:
-                    rg_d1 = collector.collect_robot_game_awards(
-                        os.path.join(base_dir, ojs_filenames[0]), d1_count, "Division 1"
-                    )
-                    tag = award.get("ScriptTagD1", "")
-                    if tag:
-                        template_data[tag] = collector.format_winners_as_html(
-                            rg_d1, include_score=True
+                for entry in division_entries:
+                    count_field = f"{entry['code']}_count" if entry["code"] else ""
+                    count = int(award.get(count_field, 0)) if count_field else 0
+                    if count > 0:
+                        rg = collector.collect_robot_game_awards(
+                            entry["path"], count, entry["label"]
                         )
-
-                if len(ojs_filenames) > 1:
-                    d2_count = int(award.get("D2_count", 0))
-                    if d2_count > 0:
-                        rg_d2 = collector.collect_robot_game_awards(
-                            os.path.join(base_dir, ojs_filenames[1]), d2_count, "Division 2"
-                        )
-                        tag = award.get("ScriptTagD2", "")
+                        tag_field = f"ScriptTag{entry['code']}" if entry["code"] else ""
+                        tag = award.get(tag_field, "") if tag_field else ""
                         if tag:
                             template_data[tag] = collector.format_winners_as_html(
-                                rg_d2, include_score=True
+                                rg, include_score=True
                             )
             else:
                 tourn_count = int(award.get("TournCount", 0))
                 if tourn_count > 0:
                     rg_winners = collector.collect_robot_game_awards(
-                        os.path.join(base_dir, ojs_filenames[0]), tourn_count, ""
+                        division_entries[0]["path"], tourn_count, ""
                     )
                     tag = award.get("ScriptTagNoDiv", "")
                     if tag:
@@ -354,52 +414,38 @@ def main():
             if using_divisions and is_div_award:
                 labels = award.get("Labels", [])
 
-                d1_count = int(award.get("D1_count", 0))
-                if d1_count > 0:
-                    d1_labels = labels[:d1_count]
-                    winners_d1 = collector.collect_judged_awards(
-                        os.path.join(base_dir, ojs_filenames[0]),
-                        award,
-                        d1_labels,
-                        "Division 1",
-                        ojs_filenames[0],
+                for entry in division_entries:
+                    count_field = f"{entry['code']}_count" if entry["code"] else ""
+                    count = int(award.get(count_field, 0)) if count_field else 0
+                    if count <= 0:
+                        continue
+
+                    division_labels = labels[:count]
+                    winners = collector.collect_judged_awards(
+                        entry["path"], award, division_labels, entry["label"], entry["filename"]
                     )
-                    tag = award.get("ScriptTagD1", "")
+                    tag_field = f"ScriptTag{entry['code']}" if entry["code"] else ""
+                    tag = award.get(tag_field, "") if tag_field else ""
                     if tag:
-                        template_data[tag] = collector.format_winners_as_html(winners_d1)
+                        template_data[tag] = collector.format_winners_as_html(winners)
 
-                    if award_id == "J_AWD_IP":
+                    if award_id == "J_AWD_IP" and "ip_this_these" not in template_data:
                         template_data["ip_this_these"] = (
-                            "this team" if len(winners_d1) == 1 else "these teams"
+                            "this team" if len(winners) == 1 else "these teams"
                         )
-                    elif award_id == "J_AWD_RD":
+                    elif award_id == "J_AWD_RD" and "rd_this_these" not in template_data:
                         template_data["rd_this_these"] = (
-                            "this team" if len(winners_d1) == 1 else "these teams"
+                            "this team" if len(winners) == 1 else "these teams"
                         )
-
-                if len(ojs_filenames) > 1:
-                    d2_count = int(award.get("D2_count", 0))
-                    if d2_count > 0:
-                        d2_labels = labels[:d2_count]
-                        winners_d2 = collector.collect_judged_awards(
-                            os.path.join(base_dir, ojs_filenames[1]),
-                            award,
-                            d2_labels,
-                            "Division 2",
-                            ojs_filenames[1],
-                        )
-                        tag = award.get("ScriptTagD2", "")
-                        if tag:
-                            template_data[tag] = collector.format_winners_as_html(winners_d2)
             else:
                 tourn_count = int(award.get("TournCount", 0))
                 labels = award.get("Labels", [])
 
                 if tourn_count > 0:
                     all_winners = []
-                    for idx, ojs_file in enumerate(ojs_filenames):
+                    for entry in division_entries:
                         winners = collector.collect_judged_awards(
-                            os.path.join(base_dir, ojs_file), award, labels, "", ojs_file
+                            entry["path"], award, labels, "", entry["filename"]
                         )
                         all_winners.extend(winners)
 
@@ -466,9 +512,9 @@ def main():
 
     # Determine critical variables based on actual divisions present
     if using_divisions:
-        # Check which divisions actually have OJS files by examining filenames
-        has_d1 = any("D1" in filename.upper() for filename in ojs_filenames)
-        has_d2 = any("D2" in filename.upper() for filename in ojs_filenames)
+        division_codes = {entry["code"] for entry in division_entries if entry["code"]}
+        has_d1 = "D1" in division_codes
+        has_d2 = "D2" in division_codes
 
         critical_vars = set()
         if has_d1:
@@ -476,7 +522,6 @@ def main():
         if has_d2:
             critical_vars.update({"J_AWD_CHAMP_D2", "ADV_D2"})
 
-        # Log which divisions are present
         if has_d1 and has_d2:
             logger.info("Both divisions present - D1 and D2 variables required")
         elif has_d1:
@@ -489,6 +534,8 @@ def main():
             print(
                 f"{Fore.CYAN}Note: Only Division 2 present - D1 variables optional{Style.RESET_ALL}"
             )
+        else:
+            logger.info("Division tournament configured but no D1/D2 codes found in ojs_files")
     else:
         critical_vars = set()  # Non-division tournaments have no critical division vars
 
@@ -511,7 +558,7 @@ def main():
         for warn in warnings:
             print(f"  {warn}")
 
-    script_filename = generate_output_filename(ojs_filenames, "closing-ceremony")
+    script_filename = generate_output_filename(ojs_files, "closing-ceremony")
     script_path = os.path.join(base_dir, script_filename)
 
     if renderer.render(script_template_file, template_data, script_path):
@@ -536,7 +583,7 @@ def main():
         for warn in warnings:
             print(f"  {warn}")
 
-    summary_filename = generate_output_filename(ojs_filenames, "summary")
+    summary_filename = generate_output_filename(ojs_files, "summary")
     summary_path = os.path.join(base_dir, summary_filename)
 
     if renderer.render(summary_template_file, template_data, summary_path):
