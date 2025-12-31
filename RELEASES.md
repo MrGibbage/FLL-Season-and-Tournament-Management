@@ -8,6 +8,10 @@
 - Added `build-toast.bat` to stamp version via `git describe`, run PyInstaller, and copy the exe to repo root.
 - Improved logging clarity by including division labels tied to each OJS entry.
 
+## 0.9.1
+- Removed filename pattern assumptions in TOAST output naming; now uses the OJS basename only.
+- (No breaking changes; rebuild exe to pick up version bump.)
+
 ## 0.8.0 (baseline summary)
 - Introduced MAESTRO to build per-tournament folders from season Excel + templates, copy assets, and generate `tournament_config.json`.
 - Introduced TOAST to validate OJS data (scores, awards, allocations) and render ceremony script/summary HTML outputs.

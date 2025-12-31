@@ -20,7 +20,7 @@ import argparse
 from colorama import init, Fore, Style
 
 # Application version. Override at build/run via TOAST_VERSION environment variable.
-__version__ = "0.9.0"
+__version__ = "0.9.1"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -112,7 +112,7 @@ def generate_output_filename(ojs_files: list, suffix: str = "closing-ceremony") 
     """Generate output filename based on the first OJS filename."""
     first = ojs_files[0]
     filename = first["filename"] if isinstance(first, dict) else str(first)
-    base_name = filename.replace("-div1.xlsm", "").replace("-div2.xlsm", "").replace(".xlsm", "")
+    base_name = os.path.splitext(os.path.basename(filename))[0]
     output_name = f"{base_name}-{suffix}.html"
     logger.debug(f"Generated output filename: {output_name}")
     return output_name
