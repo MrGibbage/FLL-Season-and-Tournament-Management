@@ -2,11 +2,6 @@
 setlocal enabledelayedexpansion
 REM Build script for both FLL Maestro and FLL Toast
 
-echo --- Step: Deriving version from git ---
-for /f "usebackq tokens=* delims=" %%v in (`git describe --tags --dirty --always`) do set VERSION=%%v
-echo VERSION=%VERSION%
-if "%VERSION%"=="" set VERSION=unknown
-
 echo --- Step: Extracting commit_message from version.py ---
 set "COMMIT_MSG="
 for /f "tokens=2* delims== " %%a in ('findstr commit_message version.py') do set "COMMIT_MSG=%%a"
@@ -23,7 +18,7 @@ if "%COMMIT_MSG%"=="" (
 )
 
 echo --- Step: Stamping version.py ---
-echo __version__ = "%VERSION%" > version.py
+echo __version__ = "pending" > version.py
 echo commit_message = "%COMMIT_MSG%" >> version.py
 
 echo --- Step: Git add, commit, and push ---
@@ -42,6 +37,23 @@ if %errorlevel%==0 (
 
     git push
     echo Git commit and push complete.
+)
+
+echo --- Step: Deriving version from git (after commit) ---
+for /f "usebackq tokens=* delims=" %%v in (`git describe --tags --dirty --always`) do set VERSION=%%v
+echo VERSION=%VERSION%
+
+REM Now stamp version.py with the clean version
+echo __version__ = "%VERSION%" > version.py
+echo commit_message = "%COMMIT_MSG%" >> version.py
+
+git add version.py
+git commit -m "Update version.py with clean version %VERSION%" >nul 2>&1
+if errorlevel 1 (
+    echo No changes to commit for version.py.
+) else (
+    git push
+    echo Git commit and push for version.py complete.
 )
 
 echo --- Step: Building both programs with version %VERSION% ---
