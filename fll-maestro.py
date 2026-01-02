@@ -6,7 +6,12 @@ except ImportError:
     commit_message = None
 
 
-# Print version info after colorama import
+# ...existing code...
+
+# After colorama import and initialization
+from colorama import init, Fore, Style
+
+init()
 print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
 if commit_message:
     print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} {commit_message}")
