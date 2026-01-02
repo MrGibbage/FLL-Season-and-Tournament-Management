@@ -24,9 +24,11 @@
 - Version bump to 0.9.2.
 
 
+
 ## 0.9.11
 - build-all.bat now prompts before committing: shows staged files, commit message, and allows edit or abort for safer, more transparent workflow.
-- build-all.bat no longer edits version.py; version.py is now the single source for both version and commit message.
+- build-all.bat, Maestro, and Toast now all read version and commit_message from version.json (using PowerShell and Python's json module).
+- The old version.py is no longer used for versioning or commit messages.
 - Maestro and Toast print both the GitHub version (commit_message) and the local version string after the splash screen.
 
 ## Unreleased / Next

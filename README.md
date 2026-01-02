@@ -35,7 +35,14 @@ Includes two tools for tournament management:
 - **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
 
 
-## Installation
+
+## Versioning and Build Workflow
+
+All version and commit message information is now stored in a single file: `version.json`.
+
+- Both Maestro and Toast read their version and commit message from `version.json` at runtime.
+- The build script (`build-all.bat`) also reads from `version.json` using PowerShell, ensuring a single source of truth.
+- The old `version.py` is no longer used for versioning or commit messages.
 
 As a regional tournament manager or program delivery partner, copy the files from this repo into a folder of your choice. Most testing has been done on Windows, but executables are included for macOS. As a tournament director or judge advisor for a single tournament, you will receive a link to download your ready-to-use OJS files and TOAST software.
 
