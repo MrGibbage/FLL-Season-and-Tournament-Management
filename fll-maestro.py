@@ -5,6 +5,10 @@ except ImportError:
     __version__ = "dev"
     commit_message = None
 
+
+...existing code...
+
+# Print version info after colorama import
 print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
 if commit_message:
     print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} {commit_message}")
