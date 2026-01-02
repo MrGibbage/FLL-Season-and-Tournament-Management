@@ -1,10 +1,9 @@
-# Read version and commit_message from version.json
-import json
-
-with open("version.json", "r", encoding="utf-8") as f:
-    _verinfo = json.load(f)
-__version__ = _verinfo.get("version", "dev")
-commit_message = _verinfo.get("commit_message", None)
+# Import version info from version.py (auto-generated at build time)
+try:
+    from version import __version__, commit_message
+except ImportError:
+    __version__ = "dev"
+    commit_message = None
 
 print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
 if commit_message:

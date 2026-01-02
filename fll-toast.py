@@ -158,11 +158,10 @@ def main():
 
     print_splash()
     # Print both GitHub version and local version
-    import json
-
-    with open("version.json", "r", encoding="utf-8") as f:
-        _verinfo = json.load(f)
-    commit_message = _verinfo.get("commit_message", None)
+    try:
+        from version import commit_message
+    except ImportError:
+        commit_message = None
     print(f"{Fore.CYAN}TOAST version:{Style.RESET_ALL} {version}")
     if commit_message:
         print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} {commit_message}")
