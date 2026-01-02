@@ -3,9 +3,10 @@ setlocal enabledelayedexpansion
 REM Build script for both FLL Maestro and FLL Toast
 
 
-echo --- Step: Extracting commit_message from version.py ---
-echo Commit message from version.py: %COMMIT_MSG%
-echo Version from version.py: %VERSION_STR%
+
+echo --- Step: Generating version.py from version.json ---
+powershell -Command "$v=Get-Content version.json | ConvertFrom-Json; Set-Content version.py ('"""'+[char]10+'This file is auto-generated from version.json by build-all.bat.'+[char]10+'Do not edit manually. Edit version.json instead.'+[char]10+'"""'+[char]10+'__version__ = "'+$v.version+'"'+[char]10+'commit_message = "'+$v.commit_message+'"'+[char]10)"
+echo version.py generated from version.json.
 
 echo --- Diagnostic: Displaying contents of version.json ---
 type version.json
