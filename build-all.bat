@@ -28,15 +28,21 @@ echo commit_message = "%COMMIT_MSG%" >> version.py
 
 echo --- Step: Git add, commit, and push ---
 git add .
-echo About to run: git commit -m "%COMMIT_MSG%"
-git commit -m "%COMMIT_MSG%"
-if errorlevel 1 (
-    echo ERROR: git commit failed. Aborting build.
-    exit /b 1
-)
+REM Check for staged changes before committing
+git diff --cached --quiet
+if %errorlevel%==0 (
+    echo No changes to commit. Skipping git commit.
+) else (
+    echo About to run: git commit -m "%COMMIT_MSG%"
+    git commit -m "%COMMIT_MSG%"
+    if errorlevel 1 (
+        echo ERROR: git commit failed. Aborting build.
+        exit /b 1
+    )
 
-git push
-echo Git commit and push complete.
+    git push
+    echo Git commit and push complete.
+)
 
 echo --- Step: Building both programs with version %VERSION% ---
 
