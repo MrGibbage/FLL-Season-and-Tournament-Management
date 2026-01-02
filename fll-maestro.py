@@ -3,7 +3,16 @@ try:
 except ImportError:
     __version__ = "dev"
 
+    # Print both GitHub version and local version
+    try:
+        from version import commit_message
+    except ImportError:
+        commit_message = None
     print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
+    if commit_message:
+        print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} {commit_message}")
+    else:
+        print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} (unknown)")
     logger = setup_logger("maestro_builder", debug=True)
     logger.info(f"MAESTRO version: {__version__}")
 

@@ -157,7 +157,16 @@ def main():
         log_debug = False  # Default (WARNING level in setup_logger when debug=False)
 
     print_splash()
+    # Print both GitHub version and local version
+    try:
+        from version import commit_message
+    except ImportError:
+        commit_message = None
     print(f"{Fore.CYAN}TOAST version:{Style.RESET_ALL} {version}")
+    if commit_message:
+        print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} {commit_message}")
+    else:
+        print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} (unknown)")
 
     if getattr(sys, "frozen", False):
         script_dir = os.path.dirname(sys.executable)
@@ -547,17 +556,25 @@ def main():
         script_template_file, template_data, critical_vars
     )
 
-    if errors:
-        print(f"{Fore.RED}Missing critical template variables:{Style.RESET_ALL}")
-        for err in errors:
-            print(f"  {err}")
-        print(
-            f"\n{Fore.RED}Cannot generate ceremony script with missing critical variables.{Style.RESET_ALL}"
-        )
-        input("\nPress ENTER to exit...")
-        sys.exit(1)
+    # Filter D1/D2 warnings for single-division tournaments
+    def is_div1_or_div2_var(var):
+        return var.endswith("_D1") or var.endswith("_D2")
 
-    if warnings:
+    show_warnings = True
+    if using_divisions:
+        division_codes = {entry["code"] for entry in division_entries if entry["code"]}
+        has_d1 = "D1" in division_codes
+        has_d2 = "D2" in division_codes
+        # If only one division present, suppress D1/D2 warnings to user
+        if (has_d1 and not has_d2) or (has_d2 and not has_d1):
+            filtered_warnings = [w for w in warnings if not is_div1_or_div2_var(w)]
+            suppressed_warnings = [w for w in warnings if is_div1_or_div2_var(w)]
+            for warn in suppressed_warnings:
+                logger.warning(f"(Suppressed to user) Missing variable: {warn}")
+            warnings = filtered_warnings
+            show_warnings = len(warnings) > 0
+
+    if show_warnings and warnings:
         print(f"{Fore.YELLOW}Missing script template variables (will be empty):{Style.RESET_ALL}")
         for warn in warnings:
             print(f"  {warn}")
@@ -612,7 +629,32 @@ def main():
             or (warnings and len(warnings) > 0)
         )
 
-        if has_warnings:
+        # Suppress final warning banner for single-division tournaments if only D1/D2 warnings exist
+        suppress_final_warning = False
+        if using_divisions:
+            division_codes = {entry["code"] for entry in division_entries if entry["code"]}
+            has_d1 = "D1" in division_codes
+            has_d2 = "D2" in division_codes
+            # Only one division present
+            if (has_d1 and not has_d2) or (has_d2 and not has_d1):
+
+                def is_div1_or_div2_var(var):
+                    return var.endswith("_D1") or var.endswith("_D2")
+
+                all_warning_lists = [
+                    validator.warnings if hasattr(validator, "warnings") else [],
+                    collector.warnings if hasattr(collector, "warnings") else [],
+                    warnings if warnings else [],
+                ]
+                all_warnings_flat = [w for sublist in all_warning_lists for w in sublist]
+                non_div_warnings = [w for w in all_warnings_flat if not is_div1_or_div2_var(w)]
+                div_warnings = [w for w in all_warnings_flat if is_div1_or_div2_var(w)]
+                for warn in div_warnings:
+                    logger.warning(f"(Suppressed to user - final banner) {warn}")
+                if len(non_div_warnings) == 0 and len(div_warnings) > 0:
+                    suppress_final_warning = True
+
+        if has_warnings and not suppress_final_warning:
             print(f"{Fore.YELLOW}{'─' * 70}{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}⚠ WARNINGS DETECTED{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}{'─' * 70}{Style.RESET_ALL}")
