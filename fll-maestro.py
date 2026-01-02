@@ -400,6 +400,9 @@ def main():
     # Print splash screen
     print_splash()
 
+    # Always print version info
+    print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
+
     # Determine script directory FIRST
     if getattr(sys, "frozen", False):
         dir_path = os.path.dirname(sys.executable)
