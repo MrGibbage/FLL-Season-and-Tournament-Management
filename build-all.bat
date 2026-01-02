@@ -5,7 +5,7 @@ REM Build script for both FLL Maestro and FLL Toast
 
 
 echo --- Step: Generating version.py from version.json ---
-powershell -Command "$v=Get-Content version.json | ConvertFrom-Json; Set-Content version.py ('"""'+[char]10+'This file is auto-generated from version.json by build-all.bat.'+[char]10+'Do not edit manually. Edit version.json instead.'+[char]10+'"""'+[char]10+'__version__ = "'+$v.version+'"'+[char]10+'commit_message = "'+$v.commit_message+'"'+[char]10)"
+powershell -Command "$v=Get-Content version.json | ConvertFrom-Json; Set-Content version.py ('"""'+[char]10+'This file is auto-generated from version.json by build-all.bat.'+[char]10+'Do not edit manually. Edit version.json instead.'+[char]10+'"""'+[char]10+'__version__ = '+([char]34+$v.version+[char]34)+[char]10+'commit_message = '+([char]34+$v.commit_message+[char]34)+[char]10)"
 echo version.py generated from version.json.
 
 echo --- Diagnostic: Displaying contents of version.json ---
