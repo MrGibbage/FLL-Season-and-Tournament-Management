@@ -34,8 +34,8 @@ Thumbs.db
 tournaments/
 
 # Build artifacts and exes
-fll-maestro.exe
-fll-toast.exe
+!fll-maestro.exe
+!fll-toast.exe
 dist/
 dist/**
 build/
