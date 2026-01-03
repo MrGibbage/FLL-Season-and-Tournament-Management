@@ -21,7 +21,7 @@ from colorama import init, Fore, Style
 
 
 # Application version. Edit manually as needed.
-TOAST_VERSION = "0.9.12"
+TOAST_VERSION = "1.00.00"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -153,17 +153,10 @@ def main():
     else:
         log_debug = False  # Default (WARNING level in setup_logger when debug=False)
 
-    print_splash()
-    # Print both GitHub version and local version
-    try:
-        from version import commit_message
-    except ImportError:
-        commit_message = None
+    # Show version before the splash (matches Maestro behavior)
     print(f"{Fore.CYAN}TOAST version:{Style.RESET_ALL} {version}")
-    if commit_message:
-        print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} {commit_message}")
-    else:
-        print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} (unknown)")
+
+    print_splash()
 
     if getattr(sys, "frozen", False):
         script_dir = os.path.dirname(sys.executable)
@@ -180,7 +173,6 @@ def main():
 
     global logger
     logger = setup_logger("ceremony_generator", debug=log_debug, log_dir=script_dir)
-    logger.info(f"TOAST version: {version}")
 
     if args.debug:
         logger.info("Debug logging enabled")
@@ -279,12 +271,26 @@ def main():
     print(f"{Fore.CYAN}Tournament:{Style.RESET_ALL} {info['tournament_long_name']}")
     print(f"{Fore.CYAN}Using divisions:{Style.RESET_ALL} {using_divisions}")
     print(f"{Fore.CYAN}OJS files:{Style.RESET_ALL} {len(ojs_files)}")
+    for entry in ojs_files:
+        div_label = entry.get("division") or ""
+        div_display = f" ({div_label})" if div_label else ""
+        print(f"  - {entry['filename']}{div_display}")
     print(f"{Fore.CYAN}Dual emcee:{Style.RESET_ALL} {dual_emcee}")
+
+    input(f"{Fore.CYAN}Press ENTER to continue, or Ctrl+C to abort...{Style.RESET_ALL}")
 
     print_header("VALIDATING OJS FILES")
     for entry in ojs_files:
         ojs_file = entry["filename"]
         ojs_path = os.path.join(base_dir, ojs_file)
+        # Detect Excel lock/temp file indicating the OJS is open (~$filename.xlsm)
+        lock_name = f"~${os.path.basename(ojs_file)}"
+        lock_path = os.path.join(base_dir, lock_name)
+
+        if os.path.exists(lock_path):
+            print_error(logger, f"OJS appears to be open (lock file found): {lock_name}")
+            sys.exit(1)
+
         if os.path.exists(ojs_path):
             print_success(f"Found: {ojs_file}")
         else:
@@ -297,7 +303,7 @@ def main():
         division_label = entry.get("division") or f"Division {idx + 1}" if using_divisions else ""
         ojs_path = os.path.join(base_dir, ojs_file)
         print(
-            f"\n{Fore.YELLOW}Validating {ojs_file} ({division_label or 'No Division'})...{Style.RESET_ALL}"
+            f"\n{Fore.CYAN}Validating {ojs_file} ({division_label or 'No Division'})...{Style.RESET_ALL}"
         )
         validator.validate_all_sheets(ojs_path, division_label)
 
@@ -550,7 +556,10 @@ def main():
         critical_vars = set()  # Non-division tournaments have no critical division vars
 
     errors, warnings = renderer.validate_template_variables(
-        script_template_file, template_data, critical_vars
+        script_template_file,
+        template_data,
+        critical_vars,
+        log_missing=not ((has_d1 and not has_d2) or (has_d2 and not has_d1)),
     )
 
     # Filter D1/D2 warnings for single-division tournaments
@@ -563,11 +572,12 @@ def main():
         has_d1 = "D1" in division_codes
         has_d2 = "D2" in division_codes
         # If only one division present, suppress D1/D2 warnings to user
-        if (has_d1 and not has_d2) or (has_d2 and not has_d1):
+        single_division = (has_d1 and not has_d2) or (has_d2 and not has_d1)
+        if single_division:
             filtered_warnings = [w for w in warnings if not is_div1_or_div2_var(w)]
             suppressed_warnings = [w for w in warnings if is_div1_or_div2_var(w)]
             for warn in suppressed_warnings:
-                logger.warning(f"(Suppressed to user) Missing variable: {warn}")
+                logger.debug(f"(Suppressed to user) Missing variable: {warn}")
             warnings = filtered_warnings
             show_warnings = len(warnings) > 0
 
@@ -593,10 +603,31 @@ def main():
     logger.debug(f"Using summary template: {summary_template_file}")
 
     errors, warnings = renderer.validate_template_variables(
-        summary_template_file, template_data, set()
+        summary_template_file,
+        template_data,
+        set(),
+        log_missing=not ((has_d1 and not has_d2) or (has_d2 and not has_d1)),
     )
 
-    if warnings:
+    show_summary_warnings = True
+    if using_divisions:
+        division_codes = {entry["code"] for entry in division_entries if entry["code"]}
+        has_d1 = "D1" in division_codes
+        has_d2 = "D2" in division_codes
+        single_division = (has_d1 and not has_d2) or (has_d2 and not has_d1)
+
+        def is_div1_or_div2_var(var):
+            return var.endswith("_D1") or var.endswith("_D2")
+
+        if single_division:
+            filtered_warnings = [w for w in warnings if not is_div1_or_div2_var(w)]
+            suppressed_warnings = [w for w in warnings if is_div1_or_div2_var(w)]
+            for warn in suppressed_warnings:
+                logger.debug(f"(Suppressed summary warning to user) Missing variable: {warn}")
+            warnings = filtered_warnings
+            show_summary_warnings = len(warnings) > 0
+
+    if show_summary_warnings and warnings:
         print(f"{Fore.YELLOW}Missing summary template variables (will be empty):{Style.RESET_ALL}")
         for warn in warnings:
             print(f"  {warn}")
@@ -632,8 +663,9 @@ def main():
             division_codes = {entry["code"] for entry in division_entries if entry["code"]}
             has_d1 = "D1" in division_codes
             has_d2 = "D2" in division_codes
+            single_division = (has_d1 and not has_d2) or (has_d2 and not has_d1)
             # Only one division present
-            if (has_d1 and not has_d2) or (has_d2 and not has_d1):
+            if single_division:
 
                 def is_div1_or_div2_var(var):
                     return var.endswith("_D1") or var.endswith("_D2")
@@ -647,7 +679,7 @@ def main():
                 non_div_warnings = [w for w in all_warnings_flat if not is_div1_or_div2_var(w)]
                 div_warnings = [w for w in all_warnings_flat if is_div1_or_div2_var(w)]
                 for warn in div_warnings:
-                    logger.warning(f"(Suppressed to user - final banner) {warn}")
+                    logger.debug(f"(Suppressed to user - final banner) {warn}")
                 if len(non_div_warnings) == 0 and len(div_warnings) > 0:
                     suppress_final_warning = True
 

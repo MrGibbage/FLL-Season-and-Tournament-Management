@@ -1,5 +1,5 @@
 # Manual version string (edit as needed)
-MAESTRO_VERSION = "0.9.12"
+MAESTRO_VERSION = "1.00.00"
 
 # ...existing code...
 
@@ -403,7 +403,7 @@ def main():
     print_splash()
 
     # Always print version info
-    print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
+    print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {MAESTRO_VERSION}")
 
     # Determine script directory FIRST
     if getattr(sys, "frozen", False):

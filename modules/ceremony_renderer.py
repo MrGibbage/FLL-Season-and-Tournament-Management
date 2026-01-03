@@ -68,7 +68,11 @@ class CeremonyRenderer:
             return set()
 
     def validate_template_variables(
-        self, template_filename: str, provided_vars: Dict[str, any], critical_vars: Set[str] = None
+        self,
+        template_filename: str,
+        provided_vars: Dict[str, any],
+        critical_vars: Set[str] = None,
+        log_missing: bool = True,
     ) -> Tuple[list[str], list[str]]:
         """Validate that all template variables are provided.
 
@@ -107,11 +111,19 @@ class CeremonyRenderer:
             non_critical_missing = missing - critical_vars
             if non_critical_missing:
                 warnings.extend(sorted(non_critical_missing))
-                logger.warning(f"Missing non-critical variables: {sorted(non_critical_missing)}")
+                if log_missing:
+                    logger.warning(
+                        f"Missing non-critical variables: {sorted(non_critical_missing)}"
+                    )
+                else:
+                    logger.debug(f"Missing non-critical variables: {sorted(non_critical_missing)}")
         else:
             if missing:
                 warnings.extend(sorted(missing))
-                logger.warning(f"Missing variables: {sorted(missing)}")
+                if log_missing:
+                    logger.warning(f"Missing variables: {sorted(missing)}")
+                else:
+                    logger.debug(f"Missing variables: {sorted(missing)}")
 
         return errors, warnings
 
