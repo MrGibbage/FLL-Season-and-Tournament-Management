@@ -31,5 +31,8 @@
 - The old version.py is no longer used for versioning or commit messages.
 - Maestro and Toast print both the GitHub version (commit_message) and the local version string after the splash screen.
 
+## 1.00.00
+- Initial production release in preparation for the VA-DC FLL Championship
+
 ## Unreleased / Next
 - (Add new entries here as changes are made.)
