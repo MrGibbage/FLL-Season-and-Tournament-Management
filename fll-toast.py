@@ -20,11 +20,8 @@ import argparse
 from colorama import init, Fore, Style
 
 
-# Application version. Override at build/run via TOAST_VERSION environment variable.
-try:
-    from version import __version__
-except ImportError:
-    __version__ = "dev"
+# Application version. Edit manually as needed.
+TOAST_VERSION = "0.9.12"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -67,7 +64,7 @@ def resolve_version() -> str:
     env_version = os.environ.get("TOAST_VERSION", "").strip()
     if env_version:
         return env_version
-    return __version__
+    return TOAST_VERSION
 
 
 def print_header(text: str):

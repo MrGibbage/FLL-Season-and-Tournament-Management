@@ -1,10 +1,5 @@
-# Import version info from version.py (auto-generated at build time)
-try:
-    from version import __version__, commit_message
-except ImportError:
-    __version__ = "dev"
-    commit_message = None
-
+# Manual version string (edit as needed)
+MAESTRO_VERSION = "0.9.12"
 
 # ...existing code...
 
@@ -12,11 +7,7 @@ except ImportError:
 from colorama import init, Fore, Style
 
 init()
-print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {__version__}")
-if commit_message:
-    print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} {commit_message}")
-else:
-    print(f"{Fore.CYAN}GitHub version:{Style.RESET_ALL} (unknown)")
+print(f"{Fore.CYAN}MAESTRO version:{Style.RESET_ALL} {MAESTRO_VERSION}")
 
 """Utility to prepare per-tournament folders and populate OJS spreadsheets.
 
