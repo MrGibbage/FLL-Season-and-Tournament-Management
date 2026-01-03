@@ -1,3 +1,16 @@
+# FLL Season and Tournament Management
+
+![MicroPython](https://img.shields.io/badge/MicroPython-compatible-2b2728.svg)
+![LEGO Spike Prime](https://img.shields.io/badge/LEGO-Spike%20Prime-FFCD00?logo=lego)
+![FIRST LEGO League](https://img.shields.io/badge/FIRST-LEGO%20League-0066B3.svg)
+![License](https://img.shields.io/github/license/MrGibbage/FLL-Season-and-Tournament-Management)
+![Last Commit](https://img.shields.io/github/last-commit/MrGibbage/FLL-Season-and-Tournament-Management)
+![Stars](https://img.shields.io/github/stars/MrGibbage/FLL-Season-and-Tournament-Management?style=social)
+
+FLL Tournament and OJS creation, and closing ceremony script generation for FLL tournament leadership
+
+**Platform:** LEGO Spike Prime Controller with MicroPython
+
 # OJS Tournament Builder & Ceremony Script Generator
 
 Automated tools to prepare per-tournament folders, populate OJS (Official Judging Spreadsheet) workbooks, validate data, and generate closing ceremony scripts for FIRST LEGO League tournaments.
