@@ -429,24 +429,25 @@ class CeremonyDataCollector:
         """
         if not winners:
             return ""
-        
+
         html_lines = []
-        for winner in winners:
+        # Present awards in reverse ranking order (e.g., 3rd → 2nd → 1st)
+        for winner in reversed(winners):
             parts = []
-            
+
             # Add label if present
             if winner.label:
                 parts.append(f"{winner.label}:")
-            
+
             # Add team info
             parts.append(f"Team {winner.team_number}, {winner.team_name}")
-            
+
             # Add score if requested
             if include_score and winner.score is not None:
                 parts.append(f"with a score of {winner.score}")
-            
+
             line = " ".join(parts)
             html_line = self.highlight_tracker.wrap_paragraph(line)
             html_lines.append(html_line)
-        
+
         return "\n".join(html_lines)

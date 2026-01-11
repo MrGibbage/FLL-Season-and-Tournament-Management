@@ -45,6 +45,7 @@ Includes two tools for tournament management:
 - **Custom awards**: Supports adding any custom awards as needed
 - **Other outputs**: Generates simplified HTML summaries
 - **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
+- **Presentation order**: Award winners render in reverse ranking order (3rd, 2nd, 1st) for ceremony flow (TOAST 1.00.01+)
 
 
 

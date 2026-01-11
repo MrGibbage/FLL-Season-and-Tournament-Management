@@ -34,5 +34,10 @@
 ## 1.00.00
 - Initial production release in preparation for the VA-DC FLL Championship
 
+## 1.00.01
+- TOAST: Award winners now render in reverse ranking order (3rd, 2nd, 1st) to match presentation flow.
+- No changes to MAESTRO other than version bump.
+- Version bump to 1.00.01.
+
 ## Unreleased / Next
 - (Add new entries here as changes are made.)
