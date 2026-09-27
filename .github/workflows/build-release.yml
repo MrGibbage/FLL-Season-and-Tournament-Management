@@ -1,0 +1,109 @@
+name: Build release binaries
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-x64
+            runner: windows-2022
+            archive: fll-tools-windows-x64.zip
+          - platform: macos-intel
+            runner: macos-15-intel
+            archive: fll-tools-macos-intel.tar.gz
+          - platform: macos-apple-silicon
+            runner: macos-15
+            archive: fll-tools-macos-apple-silicon.tar.gz
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Install locked dependencies
+        run: |
+          python -m pip install uv==0.7.13
+          uv sync --frozen --no-dev --python 3.14
+
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: uv run --no-sync python scripts/check_release_version.py "${{ github.ref_name }}"
+
+      - name: Run tests
+        run: uv run --no-sync python -m unittest discover -s tests -v
+
+      - name: Build executables
+        run: |
+          uv run --no-sync python -m PyInstaller --noconfirm --clean fll-maestro.spec
+          uv run --no-sync python -m PyInstaller --noconfirm --clean fll-toast.spec
+
+      - name: Smoke test Windows executables
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & .\dist\fll-maestro.exe --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\dist\fll-toast.exe --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Smoke test macOS executables
+        if: runner.os == 'macOS'
+        run: |
+          ./dist/fll-maestro --help
+          ./dist/fll-toast --help
+
+      - name: Package Windows executables
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path dist\fll-maestro.exe,dist\fll-toast.exe -DestinationPath "${{ matrix.archive }}"
+
+      - name: Package macOS executables
+        if: runner.os == 'macOS'
+        run: tar -C dist -czf "../${{ matrix.archive }}" fll-maestro fll-toast
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.platform }}
+          path: ${{ matrix.archive }}
+          if-no-files-found: error
+
+  release:
+    name: Create draft release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: "*"
+          path: release-files
+          merge-multiple: true
+
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" release-files/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --draft \
+            --generate-notes \
+            --title "$RELEASE_TAG"

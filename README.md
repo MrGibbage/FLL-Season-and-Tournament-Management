@@ -51,11 +51,16 @@ Includes two tools for tournament management:
 
 ## Versioning and Build Workflow
 
-All version and commit message information is now stored in a single file: `version.json`.
+PyInstaller is a build dependency; the programs do not import it at runtime. Local builds use `fll-maestro.spec` and `fll-toast.spec`.
 
-- Both Maestro and Toast read their version and commit message from `version.json` at runtime.
-- The build script (`build-all.bat`) also reads from `version.json` using PowerShell, ensuring a single source of truth.
-- The old `version.py` is no longer used for versioning or commit messages.
+GitHub Actions builds and tests separate packages for Windows x64, Intel Mac, and Apple silicon Mac. Run **Build release binaries** manually to produce test artifacts without creating a release. To prepare a release:
+
+1. Set `MAESTRO_VERSION` and `TOAST_VERSION` to the same value and commit the change.
+2. Create and push a matching tag such as `v1.00.02`.
+3. After every platform succeeds, GitHub creates a draft release containing all three archives.
+4. Download and test the archives, then publish the draft release from GitHub.
+
+Tag builds fail if either embedded application version does not match the tag. Mac builds are currently unsigned and unnotarized, so macOS may ask the user to approve the downloaded program in Privacy & Security.
 
 As a regional tournament manager or program delivery partner, copy the files from this repo into a folder of your choice. Most testing has been done on Windows, but executables are included for macOS. As a tournament director or judge advisor for a single tournament, you will receive a link to download your ready-to-use OJS files and TOAST software.
 
