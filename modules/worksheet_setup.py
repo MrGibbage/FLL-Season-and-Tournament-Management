@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from openpyxl.worksheet.table import Table
+from openpyxl.worksheet.table import Table, TableFormula
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string, get_column_letter
 from openpyxl.styles import PatternFill, Font
 from openpyxl.formatting.rule import Rule
@@ -516,6 +516,16 @@ def resize_worksheets(
         first_data_row = start_row_num + 1
         start_col_idx = column_index_from_string(start_col_letter)
         end_col_idx = column_index_from_string(end_col_letter)
+
+        if t == TABLE_CORE_VALUES:
+            # Use this team's subtotal once. The legacy template's SUM(N2:Q2)
+            # doubles GP and keeps pointing at row 2 when copied verbatim.
+            gp_formula = f"{TABLE_CORE_VALUES}[[#This Row],[Gracious Professionalism Total]]"
+            for offset, column in enumerate(table.tableColumns):
+                if column.name == "Gracious Professionalism Score":
+                    ws.cell(first_data_row, start_col_idx + offset).value = f"={gp_formula}"
+                    column.calculatedColumnFormula = TableFormula(attr_text=gp_formula)
+                    break
 
         for col_idx in range(start_col_idx + 1, end_col_idx + 1):
             template = ws.cell(row=first_data_row, column=col_idx).value

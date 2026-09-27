@@ -4,7 +4,7 @@ Generate closing ceremony scripts from OJS files for FIRST LEGO League tournamen
 
 Run notes:
 - Run from inside a tournament folder so `tournament_config.json` and OJS files are discovered in the working directory.
-- Outputs (script and summary) are written to the working directory; logs stay beside this script.
+- Use --tournament-dir to test from the project directory and --output-dir for isolated outputs/logs.
 - Use `--verbose` or `--debug` for more detail.
 
 Usage:
@@ -33,8 +33,12 @@ from modules.logger import setup_logger, print_error
 from modules.ceremony_validator import OJSValidator
 from modules.ceremony_data_collector import CeremonyDataCollector
 from modules.ceremony_renderer import CeremonyRenderer
+from modules.ceremony_workbooks import CeremonyWorkbooks
 
 # Initialize colorama
+for stream in (sys.stdout, sys.stderr):
+    if hasattr(stream, "reconfigure"):
+        stream.reconfigure(errors="replace")
 init()
 
 
@@ -137,10 +141,31 @@ def parse_arguments():
         help="Enable debug logging (DEBUG level, implies --verbose)",
     )
 
+    parser.add_argument(
+        "--tournament-dir",
+        metavar="PATH",
+        help="Read tournament configuration, OJS files, and templates from this folder",
+    )
+    parser.add_argument(
+        "--output-dir",
+        metavar="PATH",
+        help="Write HTML and logs to a separate folder (useful for local testing)",
+    )
     return parser.parse_args()
 
 
-def main():
+def main(workbooks=None):
+    if workbooks is None:
+        cache = CeremonyWorkbooks()
+        try:
+            return main(cache)
+        except Exception as exc:
+            logging.getLogger("ceremony_generator").exception("TOAST stopped: %s", exc)
+            print_error_msg(str(exc))
+            input("Press ENTER to exit...")
+            sys.exit(1)
+        finally:
+            cache.close()
     """Main execution function."""
     args = parse_arguments()
 
@@ -164,15 +189,25 @@ def main():
         script_dir = os.path.dirname(os.path.abspath(__file__))
 
     cwd_dir = os.getcwd()
-    if os.path.exists(os.path.join(cwd_dir, "tournament_config.json")):
+    if args.tournament_dir:
+        base_dir = os.path.abspath(args.tournament_dir)
+        base_note = "--tournament-dir"
+    elif os.path.exists(os.path.join(cwd_dir, "tournament_config.json")):
         base_dir = cwd_dir
         base_note = "working directory"
     else:
         base_dir = script_dir
         base_note = "script directory"
 
+    output_dir = os.path.abspath(args.output_dir) if args.output_dir else base_dir
+    if args.output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
     global logger
-    logger = setup_logger("ceremony_generator", debug=log_debug, log_dir=script_dir)
+    logger = setup_logger(
+        "ceremony_generator", debug=log_debug,
+        log_dir=output_dir if args.output_dir else script_dir,
+    )
 
     if args.debug:
         logger.info("Debug logging enabled")
@@ -204,6 +239,30 @@ def main():
         sys.exit(1)
 
     using_divisions = info["using_divisions"]
+    if not isinstance(using_divisions, bool):
+        raise ValueError("INFO.using_divisions must be true or false")
+    if not isinstance(config['AWARDS'], list):
+        raise ValueError('AWARDS must be a list')
+    award_ids = set()
+    for award in config['AWARDS']:
+        if award['ID'] in award_ids:
+            raise ValueError(f"Duplicate award ID: {award['ID']}")
+        award_ids.add(award['ID'])
+        if not isinstance(award['DivAwd'], bool):
+            raise ValueError(f"{award['Name']}: DivAwd must be true or false")
+        fields = [('D1_count', 'ScriptTagD1'), ('D2_count', 'ScriptTagD2')] if using_divisions and award['DivAwd'] else [('TournCount', 'ScriptTagNoDiv')]
+        for count_key, tag_key in fields:
+            count = award.get(count_key, 0)
+            if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+                raise ValueError(f"{award['Name']}: {count_key} must be a nonnegative integer")
+            if count and not award.get(tag_key):
+                raise ValueError(f"{award['Name']}: missing {tag_key}")
+            if award['ID'] != 'P_AWD_RG':
+                labels = award.get('Labels', [])
+                if (not isinstance(labels, list) or len(labels) < count
+                        or any(not isinstance(label, str) or not label.strip() for label in labels[:count])
+                        or len(set(labels[:count])) != count):
+                    raise ValueError(f"{award['Name']}: provide a distinct nonempty label for each allocated award")
 
     def normalize_ojs_files(raw_list):
         normalized = []
@@ -235,6 +294,11 @@ def main():
         return normalized
 
     ojs_files = normalize_ojs_files(info["ojs_files"])
+    info["ojs_files"] = ojs_files
+    if using_divisions and (any(e["division"] not in {"D1", "D2"} for e in ojs_files) or len({e["division"] for e in ojs_files}) != len(ojs_files)):
+        raise ValueError("Use distinct D1/D2 entries in INFO.ojs_files")
+    if not using_divisions and len(ojs_files) != 1:
+        raise ValueError("Non-division tournaments must have one OJS file")
 
     # Derive dual emcee highlighting from Team and Program Information!F2 in any OJS
     dual_emcee = False
@@ -245,10 +309,10 @@ def main():
             try:
                 from openpyxl import load_workbook
 
-                wb = load_workbook(ojs_path, data_only=True)
+                wb = workbooks.workbook(ojs_path)
                 ws = wb["Team and Program Information"]
                 dual_emcee_value = ws["F2"].value
-                wb.close()
+
 
                 if isinstance(dual_emcee_value, bool):
                     if dual_emcee_value:
@@ -297,7 +361,10 @@ def main():
             print_error(logger, f"OJS file not found: {ojs_file}")
 
     print_header("VALIDATING OJS DATA")
-    validator = OJSValidator()
+    maximum = info.get("robot_game_max_score", 530)
+    if isinstance(maximum, bool) or not isinstance(maximum, int) or maximum <= 0:
+        raise ValueError("INFO.robot_game_max_score must be a positive integer")
+    validator = OJSValidator(workbooks, maximum)
     for idx, entry in enumerate(ojs_files):
         ojs_file = entry["filename"]
         division_label = entry.get("division") or f"Division {idx + 1}" if using_divisions else ""
@@ -306,6 +373,9 @@ def main():
             f"\n{Fore.CYAN}Validating {ojs_file} ({division_label or 'No Division'})...{Style.RESET_ALL}"
         )
         validator.validate_all_sheets(ojs_path, division_label)
+
+    if not validator.has_errors():
+        validator.validate_tournament(config, base_dir)
 
     if validator.has_errors():
         print(f"\n{Fore.RED}{'═' * 70}{Style.RESET_ALL}")
@@ -338,7 +408,7 @@ def main():
     print_success("All validations passed!")
 
     print_header("COLLECTING AWARD DATA")
-    collector = CeremonyDataCollector(config, dual_emcee=dual_emcee)
+    collector = CeremonyDataCollector(config, dual_emcee=dual_emcee, workbooks=workbooks)
     template_data = {}
     template_data["tournament_name"] = info["tournament_long_name"]
     template_data["using_divisions"] = 1 if using_divisions else 0
@@ -375,8 +445,10 @@ def main():
             teams = collector.collect_team_list(entry["path"], entry["label"])
             if entry["code"] == "D1":
                 template_data["div1_list"] = collector.format_team_list_as_html(teams)
+                template_data["team_list_D1"] = template_data["div1_list"]
             elif entry["code"] == "D2":
                 template_data["div2_list"] = collector.format_team_list_as_html(teams)
+                template_data["team_list_D2"] = template_data["div2_list"]
     else:
         all_teams = collector.collect_team_list(division_entries[0]["path"])
         template_data["team_list"] = collector.format_team_list_as_html(all_teams)
@@ -461,7 +533,7 @@ def main():
                     all_winners = []
                     for entry in division_entries:
                         winners = collector.collect_judged_awards(
-                            entry["path"], award, labels, "", entry["filename"]
+                            entry["path"], award, labels[:tourn_count], "", entry["filename"]
                         )
                         all_winners.extend(winners)
 
@@ -490,11 +562,14 @@ def main():
 
     # Pre-seed optional template variables so missing tags render as empty strings
     expected_vars = [
+        "team_list_D1",
+        "team_list_D2",
         "div1_list",
         "div2_list",
         "team_list",
         "ADV_D1",
         "ADV_D2",
+        "ADV",
         "ip_this_these",
         "rd_this_these",
         "ja_go_goes",
@@ -502,6 +577,12 @@ def main():
     for var in expected_vars:
         if var not in template_data:
             template_data[var] = ""
+
+    # Zero allocations and absent divisions intentionally render no winners.
+    for award in config['AWARDS']:
+        for key in ['ScriptTagD1', 'ScriptTagD2', 'ScriptTagNoDiv']:
+            if award.get(key):
+                template_data.setdefault(award[key], '')
 
     # Set ja_count to 0 if not already set (must be int for template comparison)
     if "ja_count" not in template_data:
@@ -515,192 +596,27 @@ def main():
             print(f"  {warning}")
 
     print_header("RENDERING CEREMONY OUTPUTS")
-
     renderer = CeremonyRenderer(base_dir)
-    all_success = True
-    output_files = []
-
-    print(f"{Fore.CYAN}Rendering ceremony script...{Style.RESET_ALL}")
-
-    # Get script template filename from config, with fallback to default
-    script_template_file = info.get("script_template", "script_template.html.jinja")
-    logger.debug(f"Using script template: {script_template_file}")
-
-    # Determine critical variables based on actual divisions present
-    if using_divisions:
-        division_codes = {entry["code"] for entry in division_entries if entry["code"]}
-        has_d1 = "D1" in division_codes
-        has_d2 = "D2" in division_codes
-
-        critical_vars = set()
-        if has_d1:
-            critical_vars.update({"J_AWD_CHAMP_D1", "ADV_D1"})
-        if has_d2:
-            critical_vars.update({"J_AWD_CHAMP_D2", "ADV_D2"})
-
-        if has_d1 and has_d2:
-            logger.info("Both divisions present - D1 and D2 variables required")
-        elif has_d1:
-            logger.info("Single-division tournament detected - only D1 variables required")
-            print(
-                f"{Fore.CYAN}Note: Only Division 1 present - D2 variables optional{Style.RESET_ALL}"
-            )
-        elif has_d2:
-            logger.info("Single-division tournament detected - only D2 variables required")
-            print(
-                f"{Fore.CYAN}Note: Only Division 2 present - D1 variables optional{Style.RESET_ALL}"
-            )
-        else:
-            logger.info("Division tournament configured but no D1/D2 codes found in ojs_files")
-    else:
-        critical_vars = set()  # Non-division tournaments have no critical division vars
-
-    errors, warnings = renderer.validate_template_variables(
-        script_template_file,
-        template_data,
-        critical_vars,
-        log_missing=not ((has_d1 and not has_d2) or (has_d2 and not has_d1)),
-    )
-
-    # Filter D1/D2 warnings for single-division tournaments
-    def is_div1_or_div2_var(var):
-        return var.endswith("_D1") or var.endswith("_D2")
-
-    show_warnings = True
-    if using_divisions:
-        division_codes = {entry["code"] for entry in division_entries if entry["code"]}
-        has_d1 = "D1" in division_codes
-        has_d2 = "D2" in division_codes
-        # If only one division present, suppress D1/D2 warnings to user
-        single_division = (has_d1 and not has_d2) or (has_d2 and not has_d1)
-        if single_division:
-            filtered_warnings = [w for w in warnings if not is_div1_or_div2_var(w)]
-            suppressed_warnings = [w for w in warnings if is_div1_or_div2_var(w)]
-            for warn in suppressed_warnings:
-                logger.debug(f"(Suppressed to user) Missing variable: {warn}")
-            warnings = filtered_warnings
-            show_warnings = len(warnings) > 0
-
-    if show_warnings and warnings:
-        print(f"{Fore.YELLOW}Missing script template variables (will be empty):{Style.RESET_ALL}")
-        for warn in warnings:
-            print(f"  {warn}")
-
-    script_filename = generate_output_filename(ojs_files, "closing-ceremony")
-    script_path = os.path.join(base_dir, script_filename)
-
-    if renderer.render(script_template_file, template_data, script_path):
-        print_success(f"Ceremony script: {script_filename}")
-        output_files.append(script_path)
-    else:
-        print_error_msg("Failed to render ceremony script")
-        all_success = False
-
-    print(f"\n{Fore.CYAN}Rendering ceremony summary...{Style.RESET_ALL}")
-
-    # Get summary template filename from config, with fallback to default
-    summary_template_file = info.get("summary_template", "summary_template.html.jinja")
-    logger.debug(f"Using summary template: {summary_template_file}")
-
-    errors, warnings = renderer.validate_template_variables(
-        summary_template_file,
-        template_data,
-        set(),
-        log_missing=not ((has_d1 and not has_d2) or (has_d2 and not has_d1)),
-    )
-
-    show_summary_warnings = True
-    if using_divisions:
-        division_codes = {entry["code"] for entry in division_entries if entry["code"]}
-        has_d1 = "D1" in division_codes
-        has_d2 = "D2" in division_codes
-        single_division = (has_d1 and not has_d2) or (has_d2 and not has_d1)
-
-        def is_div1_or_div2_var(var):
-            return var.endswith("_D1") or var.endswith("_D2")
-
-        if single_division:
-            filtered_warnings = [w for w in warnings if not is_div1_or_div2_var(w)]
-            suppressed_warnings = [w for w in warnings if is_div1_or_div2_var(w)]
-            for warn in suppressed_warnings:
-                logger.debug(f"(Suppressed summary warning to user) Missing variable: {warn}")
-            warnings = filtered_warnings
-            show_summary_warnings = len(warnings) > 0
-
-    if show_summary_warnings and warnings:
-        print(f"{Fore.YELLOW}Missing summary template variables (will be empty):{Style.RESET_ALL}")
-        for warn in warnings:
-            print(f"  {warn}")
-
-    summary_filename = generate_output_filename(ojs_files, "summary")
-    summary_path = os.path.join(base_dir, summary_filename)
-
-    if renderer.render(summary_template_file, template_data, summary_path):
-        print_success(f"Ceremony summary: {summary_filename}")
-        output_files.append(summary_path)
-    else:
-        print_error_msg("Failed to render ceremony summary")
-        all_success = False
-
-    if all_success:
-        print(f"\n{Fore.GREEN}{'═' * 70}{Style.RESET_ALL}")
-        print(f"{Fore.GREEN}SUCCESS!{Style.RESET_ALL}".center(78))
-        print(f"{Fore.GREEN}{'═' * 70}{Style.RESET_ALL}\n")
-        print(f"{Fore.GREEN}Generated {len(output_files)} file(s):{Style.RESET_ALL}")
-        for output_path in output_files:
-            print(f"  {output_path}")
-        print()
-
-        has_warnings = (
-            (validator.warnings and len(validator.warnings) > 0)
-            or (collector.warnings and len(collector.warnings) > 0)
-            or (warnings and len(warnings) > 0)
-        )
-
-        # Suppress final warning banner for single-division tournaments if only D1/D2 warnings exist
-        suppress_final_warning = False
-        if using_divisions:
-            division_codes = {entry["code"] for entry in division_entries if entry["code"]}
-            has_d1 = "D1" in division_codes
-            has_d2 = "D2" in division_codes
-            single_division = (has_d1 and not has_d2) or (has_d2 and not has_d1)
-            # Only one division present
-            if single_division:
-
-                def is_div1_or_div2_var(var):
-                    return var.endswith("_D1") or var.endswith("_D2")
-
-                all_warning_lists = [
-                    validator.warnings if hasattr(validator, "warnings") else [],
-                    collector.warnings if hasattr(collector, "warnings") else [],
-                    warnings if warnings else [],
-                ]
-                all_warnings_flat = [w for sublist in all_warning_lists for w in sublist]
-                non_div_warnings = [w for w in all_warnings_flat if not is_div1_or_div2_var(w)]
-                div_warnings = [w for w in all_warnings_flat if is_div1_or_div2_var(w)]
-                for warn in div_warnings:
-                    logger.debug(f"(Suppressed to user - final banner) {warn}")
-                if len(non_div_warnings) == 0 and len(div_warnings) > 0:
-                    suppress_final_warning = True
-
-        if has_warnings and not suppress_final_warning:
-            print(f"{Fore.YELLOW}{'─' * 70}{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}⚠ WARNINGS DETECTED{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}{'─' * 70}{Style.RESET_ALL}")
-            print(
-                f"{Fore.YELLOW}Files generated but there are warnings you should review.{Style.RESET_ALL}"
-            )
-            print(
-                f"{Fore.YELLOW}Scroll up to review the warnings and carefully review the outputs.{Style.RESET_ALL}"
-            )
-            print(
-                f"{Fore.YELLOW}Make changes to the OJS if needed and re-run the script generator.{Style.RESET_ALL}\n"
-            )
-            input(f"{Fore.YELLOW}Press ENTER to exit...{Style.RESET_ALL}")
-        else:
-            input("Press ENTER to exit...")
-    else:
-        print_error(logger, "Failed to render one or more ceremony outputs")
+    outputs = []
+    # Validate and render both templates before writing either output.
+    for key, default, suffix in [
+        ('script_template', 'script_template.html.jinja', 'closing-ceremony'),
+        ('summary_template', 'summary_template.html.jinja', 'summary'),
+    ]:
+        filename = info.get(key, default)
+        required = renderer.extract_template_variables(filename)
+        errors, missing = renderer.validate_template_variables(filename, template_data, required)
+        if errors or missing:
+            raise ValueError(f'{filename}: missing template variables: {", ".join(errors + missing)}')
+        content = renderer.render_text(filename, template_data)
+        outputs.append((os.path.join(output_dir, generate_output_filename(ojs_files, suffix)), content))
+    for path, content in outputs:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print_success(f'Generated: {path}')
+    if validator.warnings or collector.warnings:
+        print_warning('Review the warnings above before using the ceremony files.')
+    input('Press ENTER to exit...')
 
 
 if __name__ == "__main__":

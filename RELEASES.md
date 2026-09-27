@@ -40,4 +40,8 @@
 - Version bump to 1.00.01.
 
 ## Unreleased / Next
-- (Add new entries here as changes are made.)
+- TOAST supports local tournament/output paths, caches workbook reads, supports both team-list naming conventions, and stops on missing template data or collection failures.
+- Added configurable robot-game maximum (530 by default), integer score checks, saved-calculation checks, team consistency, award allocation, and advancement validation.
+- Fixed non-division and single-division warning/rendering paths and HTML escaping of team names and award labels.
+- MAESTRO now calculates each team's Core Values GP contribution from its own subtotal, counted once, including when using the existing templates.
+- Restored AwardDef population: TOAST uses tournament_config.json, but the OJS still needs the ADV allocation for its advancement count and status message.

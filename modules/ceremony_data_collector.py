@@ -2,7 +2,8 @@
 
 import logging
 from typing import List, Tuple, Dict
-from openpyxl import load_workbook
+from html import escape
+from .ceremony_workbooks import CeremonyWorkbooks
 from dataclasses import dataclass
 
 from .constants import (
@@ -66,13 +67,14 @@ class HighlightTracker:
 class CeremonyDataCollector:
     """Collects award and team data from OJS files for ceremony script."""
     
-    def __init__(self, config: dict, dual_emcee: bool = False):
+    def __init__(self, config: dict, dual_emcee: bool = False, workbooks=None):
         """Initialize data collector.
         
         Args:
             config: Tournament configuration dictionary
             dual_emcee: Whether to enable dual emcee highlighting
         """
+        self.workbooks = workbooks if workbooks is not None else CeremonyWorkbooks()
         self.config = config
         self.warnings = []
         
@@ -81,322 +83,38 @@ class CeremonyDataCollector:
         
         logger.debug(f"Highlight tracker initialized (enabled={dual_emcee})")
     
-    def collect_team_list(self, ojs_path: str, division: str = "") -> List[Tuple[int, str]]:
-        """Collect list of teams from OJS file.
-        
-        Args:
-            ojs_path: Path to OJS file
-            division: Division name (for logging)
-            
-        Returns:
-            List of (team_number, team_name) tuples
-        """
-        logger.info(f"Collecting team list from {ojs_path}")
-        
-        teams = []
-        
-        try:
-            wb = load_workbook(ojs_path, data_only=True)
-            ws = wb[SHEET_TEAM_INFO]
-            
-            # Find the table
-            table = ws.tables.get(TABLE_TEAM_LIST)
-            if not table:
-                logger.error(f"Table {TABLE_TEAM_LIST} not found in {ojs_path}")
-                return teams
-            
-            # Get table range
-            from openpyxl.utils import range_boundaries
-            min_col, min_row, max_col, max_row = range_boundaries(table.ref)
-            
-            # Read header row to find column indices
-            header_row = min_row
-            team_num_col = None
-            team_name_col = None
-            
-            for col_idx in range(min_col, max_col + 1):
-                header_val = ws.cell(row=header_row, column=col_idx).value
-                if header_val == COL_TEAM_NUMBER:
-                    team_num_col = col_idx
-                elif header_val == COL_TEAM_NAME:
-                    team_name_col = col_idx
-            
-            if team_num_col is None or team_name_col is None:
-                logger.error(f"Required columns not found in {TABLE_TEAM_LIST}")
-                return teams
-            
-            # Read data rows
-            for row_idx in range(min_row + 1, max_row + 1):
-                team_num = ws.cell(row=row_idx, column=team_num_col).value
-                team_name = ws.cell(row=row_idx, column=team_name_col).value
-                
-                if team_num and team_name:
-                    teams.append((int(team_num), str(team_name)))
-            
-            wb.close()
-            logger.info(f"Collected {len(teams)} teams from {division if division else 'tournament'}")
-            
-        except Exception as e:
-            logger.error(f"Error collecting team list: {e}")
-            import traceback
-            logger.debug(traceback.format_exc())
-        
-        return teams
-    
-    def collect_advancing_teams(self, ojs_path: str, division: str = "") -> List[Tuple[int, str]]:
-        """Collect list of advancing teams from OJS file.
-        
-        Args:
-            ojs_path: Path to OJS file
-            division: Division name (for logging)
-            
-        Returns:
-            List of (team_number, team_name) tuples for advancing teams
-        """
-        logger.info(f"Collecting advancing teams from {ojs_path}")
-        
-        advancing = []
-        
-        try:
-            wb = load_workbook(ojs_path, data_only=True)
-            ws = wb[SHEET_RESULTS]
-            
-            # Find the table
-            table = ws.tables.get(TABLE_TOURNAMENT_DATA)
-            if not table:
-                logger.error(f"Table {TABLE_TOURNAMENT_DATA} not found in {ojs_path}")
-                return advancing
-            
-            # Get table range
-            from openpyxl.utils import range_boundaries
-            min_col, min_row, max_col, max_row = range_boundaries(table.ref)
-            
-            # Read header row to find column indices
-            header_row = min_row
-            team_num_col = None
-            team_name_col = None
-            advance_col = None
-            
-            for col_idx in range(min_col, max_col + 1):
-                header_val = ws.cell(row=header_row, column=col_idx).value
-                if header_val == COL_TEAM_NUMBER or header_val == "Team Number":
-                    team_num_col = col_idx
-                elif header_val == COL_TEAM_NAME:
-                    team_name_col = col_idx
-                elif header_val == "Advance?":
-                    advance_col = col_idx
-            
-            if team_num_col is None or team_name_col is None or advance_col is None:
-                logger.error(f"Required columns not found in {TABLE_TOURNAMENT_DATA}")
-                return advancing
-            
-            # Read data rows
-            for row_idx in range(min_row + 1, max_row + 1):
-                advance_val = ws.cell(row=row_idx, column=advance_col).value
-                
-                if advance_val == "Yes":
-                    team_num = ws.cell(row=row_idx, column=team_num_col).value
-                    team_name = ws.cell(row=row_idx, column=team_name_col).value
-                    
-                    if team_num and team_name:
-                        advancing.append((int(team_num), str(team_name)))
-            
-            wb.close()
-            logger.info(f"Collected {len(advancing)} advancing teams from {division if division else 'tournament'}")
-            
-        except Exception as e:
-            logger.error(f"Error collecting advancing teams: {e}")
-            import traceback
-            logger.debug(traceback.format_exc())
-        
-        return advancing
-    
-    def collect_robot_game_awards(self, ojs_path: str, count: int, division: str = "") -> List[AwardWinner]:
-        """Collect robot game award winners.
-        
-        Args:
-            ojs_path: Path to OJS file
-            count: Number of awards to collect
-            division: Division name (for logging)
-            
-        Returns:
-            List of AwardWinner objects
-        """
-        logger.info(f"Collecting top {count} robot game awards from {ojs_path}")
-        
+    def collect_team_list(self, ojs_path, division=""):
+        df = self.workbooks.table(ojs_path, SHEET_TEAM_INFO, TABLE_TEAM_LIST)
+        return [(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]))
+                for _, row in df.iterrows()]
+
+    def collect_advancing_teams(self, ojs_path, division=""):
+        df = self.workbooks.table(ojs_path, SHEET_RESULTS, TABLE_TOURNAMENT_DATA)
+        return [(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]))
+                for _, row in df[df['Advance?'] == 'Yes'].iterrows()]
+
+    def collect_robot_game_awards(self, ojs_path, count, division=""):
+        df = self.workbooks.table(ojs_path, SHEET_RESULTS, TABLE_TOURNAMENT_DATA)
+        selected = df[df['Robot Game Rank'].between(1, count)].sort_values('Robot Game Rank')
         winners = []
-        
-        try:
-            wb = load_workbook(ojs_path, data_only=True)
-            ws = wb[SHEET_RESULTS]
-            
-            # Find the table
-            table = ws.tables.get(TABLE_TOURNAMENT_DATA)
-            if not table:
-                logger.error(f"Table {TABLE_TOURNAMENT_DATA} not found in {ojs_path}")
-                return winners
-            
-            # Get table range
-            from openpyxl.utils import range_boundaries
-            min_col, min_row, max_col, max_row = range_boundaries(table.ref)
-            
-            # Read header row
-            header_row = min_row
-            team_num_col = None
-            team_name_col = None
-            rg_rank_col = None
-            rg_score_col = None
-            
-            # Read all headers for debugging
-            all_headers = []
-            for col_idx in range(min_col, max_col + 1):
-                header_val = ws.cell(row=header_row, column=col_idx).value
-                all_headers.append(header_val)
-                if header_val == COL_TEAM_NUMBER or header_val == "Team Number":
-                    team_num_col = col_idx
-                elif header_val == COL_TEAM_NAME:
-                    team_name_col = col_idx
-                elif header_val == "Robot Game Rank":
-                    rg_rank_col = col_idx
-                elif header_val == "Max Robot Game Score":
-                    rg_score_col = col_idx
-            
-            logger.debug(f"Table columns: {all_headers}")
-            logger.debug(f"Found columns - Team#: {team_num_col}, Name: {team_name_col}, RG Rank: {rg_rank_col}, RG Score: {rg_score_col}")
-            
-            # Validate that all required columns were found
-            if team_num_col is None:
-                logger.error(f"Column '{COL_TEAM_NUMBER}' or 'Team Number' not found in {TABLE_TOURNAMENT_DATA}")
-                wb.close()
-                return winners
-            if team_name_col is None:
-                logger.error(f"Column '{COL_TEAM_NAME}' not found in {TABLE_TOURNAMENT_DATA}")
-                wb.close()
-                return winners
-            if rg_rank_col is None:
-                logger.error(f"Column 'Robot Game Rank' not found in {TABLE_TOURNAMENT_DATA}")
-                wb.close()
-                return winners
-            if rg_score_col is None:
-                logger.error(f"Column 'Max Robot Game Score' not found in {TABLE_TOURNAMENT_DATA}")
-                wb.close()
-                return winners
-            
-            # Collect teams with ranks 1 through count
-            for row_idx in range(min_row + 1, max_row + 1):
-                rank = ws.cell(row=row_idx, column=rg_rank_col).value
-                
-                if rank and 1 <= int(rank) <= count:
-                    team_num = ws.cell(row=row_idx, column=team_num_col).value
-                    team_name = ws.cell(row=row_idx, column=team_name_col).value
-                    score = ws.cell(row=row_idx, column=rg_score_col).value
-                    
-                    # Determine label based on rank
-                    rank_labels = {1: "1st Place", 2: "2nd Place", 3: "3rd Place"}
-                    label = rank_labels.get(int(rank), f"{rank}th Place")
-                    
-                    if team_num and team_name:
-                        winners.append(AwardWinner(
-                            team_number=int(team_num),
-                            team_name=str(team_name),
-                            label=label,
-                            score=int(score) if score else None
-                        ))
-            
-            wb.close()
-            logger.info(f"Collected {len(winners)} robot game winners")
-            
-        except Exception as e:
-            logger.error(f"Error collecting robot game awards: {e}")
-            import traceback
-            logger.debug(traceback.format_exc())
-        
+        for _, row in selected.iterrows():
+            rank = int(row['Robot Game Rank'])
+            label = {1: '1st Place', 2: '2nd Place', 3: '3rd Place'}.get(rank, f'{rank}th Place')
+            winners.append(AwardWinner(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]),
+                                       label, int(row['Max Robot Game Score'])))
         return winners
-    
-    def collect_judged_awards(self, ojs_path: str, award: dict, labels: List[str], 
-                              division: str, ojs_filename: str) -> List[AwardWinner]:
-        """Collect judged award winners.
-        
-        Args:
-            ojs_path: Path to OJS file
-            award: Award configuration dict
-            labels: List of award labels
-            division: Division name
-            ojs_filename: OJS filename (for warnings)
-            
-        Returns:
-            List of AwardWinner objects
-        """
-        award_id = award['ID']
-        award_name = award['Name']
-        
-        logger.info(f"Collecting {award_name} from {ojs_path}")
-        
+
+    def collect_judged_awards(self, ojs_path, award, labels, division, ojs_filename):
+        df = self.workbooks.table(ojs_path, SHEET_RESULTS, TABLE_TOURNAMENT_DATA)
         winners = []
-        
-        try:
-            wb = load_workbook(ojs_path, data_only=True)
-            ws = wb[SHEET_RESULTS]
-            
-            # Find the table
-            table = ws.tables.get(TABLE_TOURNAMENT_DATA)
-            if not table:
-                logger.error(f"Table {TABLE_TOURNAMENT_DATA} not found in {ojs_path}")
-                return winners
-            
-            # Get table range
-            from openpyxl.utils import range_boundaries
-            min_col, min_row, max_col, max_row = range_boundaries(table.ref)
-            
-            # Read header row
-            header_row = min_row
-            team_num_col = None
-            team_name_col = None
-            award_col = None
-            
-            for col_idx in range(min_col, max_col + 1):
-                header_val = ws.cell(row=header_row, column=col_idx).value
-                if header_val == COL_TEAM_NUMBER or header_val == "Team Number":
-                    team_num_col = col_idx
-                elif header_val == COL_TEAM_NAME:
-                    team_name_col = col_idx
-                elif header_val == "Award":
-                    award_col = col_idx
-            
-            # Collect teams with matching awards
-            for label in labels:
-                found = False
-                for row_idx in range(min_row + 1, max_row + 1):
-                    award_val = ws.cell(row=row_idx, column=award_col).value
-                    
-                    if award_val == label:
-                        team_num = ws.cell(row=row_idx, column=team_num_col).value
-                        team_name = ws.cell(row=row_idx, column=team_name_col).value
-                        
-                        if team_num and team_name:
-                            winners.append(AwardWinner(
-                                team_number=int(team_num),
-                                team_name=str(team_name),
-                                label=label
-                            ))
-                            found = True
-                            break
-                
-                if not found and division:  # Only warn for division awards
-                    self.warnings.append(
-                        f"{ojs_filename}: {award_name} '{label}' not assigned"
-                    )
-            
-            wb.close()
-            logger.info(f"Collected {len(winners)} winners for {award_name}")
-            
-        except Exception as e:
-            logger.error(f"Error collecting judged awards: {e}")
-            import traceback
-            logger.debug(traceback.format_exc())
-        
+        for label in labels:
+            selected = df[df['Award'] == label]
+            if len(selected) > 1:
+                raise ValueError(f"{ojs_filename}: duplicate award {label}")
+            for _, row in selected.iterrows():
+                winners.append(AwardWinner(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]), label))
         return winners
-    
+
     def format_team_list_as_html(self, teams: List[Tuple[int, str]]) -> str:
         """Format team list as HTML paragraphs with highlighting.
         
@@ -411,7 +129,7 @@ class CeremonyDataCollector:
         
         html_lines = []
         for team_num, team_name in teams:
-            line = f"Team {team_num}, {team_name}"
+            line = f"Team {team_num}, {escape(team_name)}"
             html_line = self.highlight_tracker.wrap_paragraph(line)
             html_lines.append(html_line)
         
@@ -437,10 +155,10 @@ class CeremonyDataCollector:
 
             # Add label if present
             if winner.label:
-                parts.append(f"{winner.label}:")
+                parts.append(f"{escape(winner.label)}:")
 
             # Add team info
-            parts.append(f"Team {winner.team_number}, {winner.team_name}")
+            parts.append(f"Team {winner.team_number}, {escape(winner.team_name)}")
 
             # Add score if requested
             if include_score and winner.score is not None:

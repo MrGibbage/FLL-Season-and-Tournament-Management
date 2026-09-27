@@ -225,7 +225,7 @@ Log files are automatically created with timestamps in the script directory:
 
 **"Validation errors found"**
 - Review the error messages - they indicate specific OJS data issues
-- Check scores are within valid ranges (Innovation/Robot Design: 0-4, Core Values: 0-3)
+- Check scores are whole numbers in the permitted ranges (Innovation/Robot Design: 0-4; GP: 0, 2, 3, or 4; Robot Game: 0 through `INFO.robot_game_max_score`, default 530).
 - Verify all award selections match allocated counts
 - Ensure Champion's Rank values are sequential starting from 1
 

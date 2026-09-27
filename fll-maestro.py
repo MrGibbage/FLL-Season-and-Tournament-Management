@@ -781,7 +781,9 @@ def main():
             set_up_meta_worksheet(row, ojs_book, config, tournament_folder, using_divisions)
             progress.update("Metadata added")
 
-            # Skipping copy_award_def: AwardDef table is not used by downstream tools
+            # TOAST uses tournament_config.json, but the OJS advancement lookup
+            # still needs AwardDef (including its ADV row).
+            copy_award_def(row, ojs_book, dfAwardDef)
 
             hide_worksheets(row, ojs_book)
             progress.update("Worksheets hidden")

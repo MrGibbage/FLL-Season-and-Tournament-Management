@@ -3,7 +3,7 @@
 import logging
 import re
 from typing import Dict, Set, Tuple
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, meta, StrictUndefined
 
 logger = logging.getLogger("ceremony_generator")
 
@@ -44,28 +44,18 @@ class CeremonyRenderer:
         Returns:
             Set of variable names found in template (excluding loop variables)
         """
-        try:
-            with open(f"{self.template_dir}/{template_filename}", "r", encoding="utf-8") as f:
-                content = f.read()
+        source, _, _ = self.env.loader.get_source(self.env, template_filename)
+        tree = self.env.parse(source)
+        return meta.find_undeclared_variables(tree)
 
-            # Match {{ variable_name }} or {{ variable_name|filter }} patterns
-            pattern = r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\|[^}]*)?\}\}"
-            variables = set(re.findall(pattern, content))
-
-            # Extract loop variables defined in {% for var in ... %} statements
-            loop_var_pattern = r"\{%\s*for\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+in\s+"
-            loop_vars = set(re.findall(loop_var_pattern, content))
-
-            # Exclude loop variables from the variables set
-            variables = variables - loop_vars
-
-            logger.debug(f"Found {len(variables)} variables in template: {sorted(variables)}")
-            if loop_vars:
-                logger.debug(f"Excluded {len(loop_vars)} loop variables: {sorted(loop_vars)}")
-            return variables
-        except Exception as e:
-            logger.error(f"Error extracting template variables: {e}")
-            return set()
+    def render_text(self, template_filename, data):
+        """Strict rendering for TOAST; never silently omit missing data."""
+        env = self.env.overlay(undefined=StrictUndefined)
+        return env.get_template(template_filename).render(
+            bg_color_0='lightblue' if data.get('dual_emcee') else 'transparent',
+            bg_color_1='yellow' if data.get('dual_emcee') else 'transparent',
+            **data,
+        )
 
     def validate_template_variables(
         self,
