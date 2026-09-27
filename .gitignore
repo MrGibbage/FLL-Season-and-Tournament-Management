@@ -29,6 +29,7 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+workspace/
 
 # Tournament folders
 tournaments/
