@@ -85,7 +85,7 @@ The executables contain Python and all Python dependencies. They do not contain 
 
 ## GitHub Actions builds
 
-Current status: the specifications and workflow are committed, and both Windows executables have been built and smoke-tested locally. The hosted three-platform workflow has not yet completed its first run, and no GitHub Release has been created. The next verification step is the manual test build below.
+Current status: the specifications and workflow are committed, and both Windows executables have been built and smoke-tested locally. The first hosted run successfully built, tested, and smoke-tested all three platforms; its two Mac jobs then exposed an archive-path error during artifact upload. That path has been corrected. A second manual run is required to verify all three downloadable artifacts. No GitHub Release has been created yet.
 
 The **Build release binaries** workflow in `.github/workflows/build-release.yml` uses clean hosted runners to:
 

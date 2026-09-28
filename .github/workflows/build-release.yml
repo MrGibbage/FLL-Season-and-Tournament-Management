@@ -73,7 +73,9 @@ jobs:
 
       - name: Package macOS executables
         if: runner.os == 'macOS'
-        run: tar -C dist -czf "../${{ matrix.archive }}" fll-maestro fll-toast
+        run: |
+          tar -czf "${{ github.workspace }}/${{ matrix.archive }}" -C dist fll-maestro fll-toast
+          test -f "${{ github.workspace }}/${{ matrix.archive }}"
 
       - uses: actions/upload-artifact@v7
         with:
