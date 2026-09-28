@@ -8,9 +8,9 @@
 
 FLL Tournament and OJS creation, and closing ceremony script generation for FLL tournament leadership
 
-**Platform:** LEGO Spike Prime Controller with MicroPython
+**Platforms:** Windows and macOS desktop computers
 
-# OJS Tournament Builder & Ceremony Script Generator
+## OJS Tournament Builder & Ceremony Script Generator
 
 Automated tools to prepare per-tournament folders, populate OJS (Official Judging Spreadsheet) workbooks, validate data, and generate closing ceremony scripts for FIRST LEGO League tournaments.
 Includes two tools for tournament management:
@@ -33,6 +33,7 @@ Includes two tools for tournament management:
   - Sort the Results and Rankings worksheet by any column
   - Locked cells prevent inadvertent altering of formulas
   - Admin menu to lock, unlock, and add new teams
+  - Admin command for controlled team-name changes by validated team number
   - Practice mode by populating OJS with random scores
 - **Automation Support**: OJS directly feeds TOAST. No need to manually transcribe scores, team numbers and names into the closing ceremony script
 - **Recognizable**: Improved but familiar OJS is virtually indistinguishable from FIRST-distributed OJS from years past
@@ -49,20 +50,21 @@ Includes two tools for tournament management:
 
 
 
-## Versioning and Build Workflow
+## Getting the executables
 
-PyInstaller is a build dependency; the programs do not import it at runtime. Local builds use `fll-maestro.spec` and `fll-toast.spec`.
+Published versions are available from the repository's [GitHub Releases page](https://github.com/MrGibbage/FLL-Season-and-Tournament-Management/releases). Each release contains three archives:
 
-GitHub Actions builds and tests separate packages for Windows x64, Intel Mac, and Apple silicon Mac. Run **Build release binaries** manually to produce test artifacts without creating a release. To prepare a release:
+- `fll-tools-windows-x64.zip` for 64-bit Windows
+- `fll-tools-macos-intel.tar.gz` for Intel Macs
+- `fll-tools-macos-apple-silicon.tar.gz` for M-series Macs
 
-1. Set `MAESTRO_VERSION` and `TOAST_VERSION` to the same value and commit the change.
-2. Create and push a matching tag such as `v1.00.02`.
-3. After every platform succeeds, GitHub creates a draft release containing all three archives.
-4. Download and test the archives, then publish the draft release from GitHub.
+Download and extract the archive for the computer that will run the software. Regional leadership uses both MAESTRO and TOAST. A tournament director normally needs only TOAST, placed in the tournament folder beside `tournament_config.json`, the OJS workbook, and the Jinja templates. TOAST can then be run without command-line arguments.
 
-Tag builds fail if either embedded application version does not match the tag. Mac builds are currently unsigned and unnotarized, so macOS may ask the user to approve the downloaded program in Privacy & Security.
+GitHub Actions builds each platform on its native operating system. A manual workflow run produces temporary test artifacts without creating a release. A matching version tag builds the same three packages and creates a draft release for final testing and publication. The Mac programs are currently unsigned and unnotarized, so macOS may require approval in Privacy & Security before their first run.
 
-As a regional tournament manager or program delivery partner, copy the files from this repo into a folder of your choice. Most testing has been done on Windows, but executables are included for macOS. As a tournament director or judge advisor for a single tournament, you will receive a link to download your ready-to-use OJS files and TOAST software.
+PyInstaller is used only while building; neither program imports it or requires Python on the end user's computer. Maintainer instructions for local builds, manual GitHub test builds, version tags, and draft releases are in [DEVELOPMENT.md](DEVELOPMENT.md).
+
+If the Releases page does not yet contain a published version, a maintainer must first run the manual three-platform build and then create the version tag described in the development guide.
 
 ## Usage
 
@@ -115,8 +117,6 @@ Each configuration file should follow this structure:
   "tournament_template": "2025-Qualifier-Template.xlsm",
   "tournament_folder": "C:/Users/username/Documents/tournaments",
   "copy_file_list_common": [
-    {"source": "script_maker-win.exe", "dest": "script_maker-win.exe"},
-    {"source": "script_maker-mac", "dest": "script_maker-mac"},
     {"source": "instructions.pdf", "dest": "instructions.pdf"}
   ],
   "copy_file_list_divisions_only": [
@@ -255,9 +255,9 @@ Log files are automatically created with timestamps in the script directory:
   - Tournament builder: `ojs_builder_YYYYMMDD_HHMMSS.log`
   - Ceremony generator: `ceremony_generator_YYYYMMDD_HHMMSS.log`
 2. **Run with `--verbose` or `--debug`** - Shows step-by-step execution
-3. **Use `--interactive`** - See validation summary before processing (builder only)
+3. **Run the complete test suite** - See `DEVELOPMENT.md` for the command and local test-mode examples
 4. **Review error suggestions** - Scripts provide recovery steps for common issues
 
 ## Development
 
-Comfortable editing Python? Clone the repo and extend MAESTRO or TOAST as needed. Use the module structure and templates as your starting point.
+Comfortable editing Python? Clone the repo and see [DEVELOPMENT.md](DEVELOPMENT.md) for environment setup, tests, local executable builds, and version-tagged releases.
