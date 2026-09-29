@@ -11,7 +11,9 @@ from modules.excel_operations import read_table_as_df
 from modules.worksheet_setup import (
     copy_award_def,
     resize_worksheets,
+    set_up_award_worksheet,
     set_up_tapi_worksheet,
+    validate_shared_award_counts,
 )
 
 
@@ -32,8 +34,20 @@ class ScoringSetupTests(unittest.TestCase):
             tournaments = read_table_as_df(str(source), sheet, table).fillna(0)
             awards = read_table_as_df(str(source), "AwardDef", "AwardDef").fillna(0)
             assignments = read_table_as_df(str(source), "Assignments", "Assignments").fillna(0)
+            tournament_rows = tournaments[tournaments["Short Name"] == name].copy()
+            shared_errors = validate_shared_award_counts(tournament_rows, awards, divisions)
+            if divisions and name == "Dunford":
+                self.assertFalse(shared_errors)
+                mismatched = tournament_rows.copy()
+                mismatched.loc[mismatched["Div"] == "D1", "J_AWD_Judges"] = 1
+                mismatched.loc[mismatched["Div"] == "D2", "J_AWD_Judges"] = 2
+                mismatch_errors = validate_shared_award_counts(mismatched, awards, divisions)
+                self.assertIn("Dunford", mismatch_errors)
+                self.assertIn("D1=1, D2=2", mismatch_errors["Dunford"][0])
+            else:
+                self.assertFalse(shared_errors)
             counts = []
-            for _, tournament in tournaments[tournaments["Short Name"] == name].iterrows():
+            for _, tournament in tournament_rows.iterrows():
                 with self.subTest(tournament=name, division=tournament.get("Div")):
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", UserWarning)
@@ -44,6 +58,7 @@ class ScoringSetupTests(unittest.TestCase):
                         tournament, book, assignments, divisions
                     ))
                     copy_award_def(tournament, book, awards)
+                    set_up_award_worksheet(tournament, book, awards, divisions)
                     resize_worksheets(tournament, book, assignments, divisions)
 
                     # Round-trip in memory to check the formulas and table metadata
@@ -80,6 +95,12 @@ class ScoringSetupTests(unittest.TestCase):
                     self.assertEqual(entries["ADV"], int(tournament["ADV"]))
                     for award_id, count in entries.items():
                         self.assertEqual(count, int(tournament.get(award_id, 0)))
+                    if divisions and name == "Dunford":
+                        self.assertEqual(entries["J_AWD_Judges"], 2)
+                        dropdown = saved["AwardListDropdowns"]
+                        cells = list(dropdown[dropdown.tables["AwardListDropdowns"].ref])
+                        ids = [r[1].value for r in cells[1:]]
+                        self.assertEqual(ids.count("J_AWD_Judges"), 2)
                     counts.append(entries["ADV"])
                     self.assertEqual(saved["Results and Rankings"]["Q1"].value,
                                      '=VLOOKUP("ADV", AwardDef[], 4,0)')

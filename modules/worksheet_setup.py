@@ -29,6 +29,8 @@ from .constants import (
     COL_OJS_FILENAME,
     COL_DIVISION,
     COL_ADVANCING,
+    COL_COLUMN_NAME,
+    COL_DIV_AWARD,
     SHEET_TEAM_INFO,
     SHEET_AWARD_DROPDOWNS,
     SHEET_META,
@@ -58,6 +60,44 @@ from .logger import print_error
 
 
 logger = logging.getLogger("ojs_builder")
+
+
+def validate_shared_award_counts(
+    tournaments: pd.DataFrame,
+    dfAwardDef: pd.DataFrame,
+    using_divisions: bool,
+) -> dict[str, list[str]]:
+    """Find shared awards whose allocations differ between divisions."""
+    errors: dict[str, list[str]] = {}
+    if not using_divisions:
+        return errors
+
+    for short_name, tournament_rows in tournaments.groupby(COL_SHORT_NAME, sort=False):
+        for _, award in dfAwardDef.iterrows():
+            column_name = award.get(COL_COLUMN_NAME)
+            div_award = award.get(COL_DIV_AWARD, False)
+            if isinstance(div_award, str):
+                is_div_award = div_award.strip().upper() in {"TRUE", "YES", "1"}
+            else:
+                is_div_award = bool(div_award)
+
+            if is_div_award or column_name not in tournament_rows.columns:
+                continue
+
+            counts = {
+                str(row.get(COL_DIVISION, "")): _to_int(row.get(column_name, 0))
+                for _, row in tournament_rows.iterrows()
+            }
+            if len(set(counts.values())) <= 1:
+                continue
+
+            award_name = award.get("Name", column_name)
+            allocations = ", ".join(f"{division}={count}" for division, count in counts.items())
+            errors.setdefault(str(short_name), []).append(
+                f"{award_name} ({column_name}) has different division allocations: {allocations}"
+            )
+
+    return errors
 
 
 def set_up_tapi_worksheet(

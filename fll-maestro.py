@@ -51,6 +51,7 @@ from modules.worksheet_setup import (
     hide_worksheets,
     remove_external_links,
     fix_named_ranges,
+    validate_shared_award_counts,
 )
 from modules.ceremony_renderer import CeremonyRenderer
 from modules.user_feedback import (
@@ -646,6 +647,37 @@ def main():
                     },
                 )
 
+    shared_award_errors = validate_shared_award_counts(
+        dfTournaments, dfAwardDef, using_divisions
+    )
+    building_single_tournament = bool(args.tournament or tourn)
+
+    if shared_award_errors:
+        for short_name, errors in shared_award_errors.items():
+            for error in errors:
+                logger.error(f"{short_name}: {error}")
+
+        if building_single_tournament:
+            for short_name, errors in shared_award_errors.items():
+                print(f"\n{short_name}:")
+                for error in errors:
+                    print(f"  - {error}")
+            print_error(
+                logger,
+                f"Cannot build {next(iter(shared_award_errors))}: shared award allocations "
+                "must match in every division.",
+                error_type="invalid_data",
+                context={"location": "DivTournaments"},
+            )
+
+        print_warning(
+            f"Skipping {len(shared_award_errors)} tournament(s) with mismatched shared awards."
+        )
+        for short_name, errors in shared_award_errors.items():
+            print(f"  {short_name}:")
+            for error in errors:
+                print(f"    - {error}")
+
     # Cleanup existing files (unless skipped)
     if not args.no_cleanup:
         print_section_header("CLEANUP")
@@ -676,6 +708,11 @@ def main():
             sys.exit(1)
     else:
         logger.info("No existing files to clean up")
+
+    if shared_award_errors:
+        dfTournaments = dfTournaments[
+            ~dfTournaments[COL_SHORT_NAME].isin(shared_award_errors)
+        ]
 
     # Process tournaments automatically
     print_section_header("PROCESSING TOURNAMENTS")
@@ -946,9 +983,22 @@ def main():
 
         progress.complete(f"✓ {tournament_name} complete!")
 
-    print(f"\n{Fore.GREEN}{'═' * 60}{Style.RESET_ALL}")
-    print(f"{Fore.GREEN}  ALL TOURNAMENTS PROCESSED SUCCESSFULLY!  {Style.RESET_ALL}".center(70))
-    print(f"{Fore.GREEN}{'═' * 60}{Style.RESET_ALL}\n")
+    if shared_award_errors:
+        print(f"\n{Fore.YELLOW}{'═' * 60}{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}  BUILD COMPLETED WITH ERRORS  {Style.RESET_ALL}".center(70))
+        print(f"{Fore.YELLOW}{'═' * 60}{Style.RESET_ALL}\n")
+        print_warning(
+            f"{len(shared_award_errors)} tournament(s) could not be built because shared "
+            "award allocations differ between divisions."
+        )
+        for short_name, errors in shared_award_errors.items():
+            print(f"  {short_name}:")
+            for error in errors:
+                print(f"    - {error}")
+    else:
+        print(f"\n{Fore.GREEN}{'═' * 60}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}  ALL TOURNAMENTS PROCESSED SUCCESSFULLY!  {Style.RESET_ALL}".center(70))
+        print(f"{Fore.GREEN}{'═' * 60}{Style.RESET_ALL}\n")
 
     # Important note about VBA references
     print(f"{Fore.CYAN}{'─' * 60}{Style.RESET_ALL}")
@@ -961,10 +1011,15 @@ def main():
     print(f"To prevent this: Clean the template file's VBA references first.")
     print(f"{Fore.CYAN}{'─' * 60}{Style.RESET_ALL}\n")
 
-    logger.info("All tournaments processed successfully")
+    if shared_award_errors:
+        logger.error(
+            f"Build completed with {len(shared_award_errors)} tournament(s) skipped"
+        )
+    else:
+        logger.info("All tournaments processed successfully")
 
     # Track if there were any warnings or issues
-    has_warnings = bool(division_mismatches or award_count_issues)
+    has_warnings = bool(division_mismatches or award_count_issues or shared_award_errors)
 
     # Display division mismatch summary if any occurred
     if division_mismatches:
