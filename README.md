@@ -58,6 +58,11 @@ Published versions are available from the repository's [GitHub Releases page](ht
 - `fll-tools-macos-intel.tar.gz` for Intel Macs
 - `fll-tools-macos-apple-silicon.tar.gz` for M-series Macs
 
+To choose a Mac download, open **Apple menu () > About This Mac** and look for **Chip** or **Processor**:
+
+- If it lists an Apple M-series chip, such as M1, M2, M3, or M4, download `fll-tools-macos-apple-silicon.tar.gz`.
+- If it lists an Intel processor, download `fll-tools-macos-intel.tar.gz`.
+
 Download and extract the archive for the computer that will run the software. Regional leadership uses both MAESTRO and TOAST. A tournament director normally needs only TOAST, placed in the tournament folder beside `tournament_config.json`, the OJS workbook, and the Jinja templates. TOAST can then be run without command-line arguments.
 
 GitHub Actions builds each platform on its native operating system. A manual workflow run produces temporary test artifacts without creating a release. A matching version tag builds the same three packages and creates a draft release for final testing and publication. The Mac programs are currently unsigned and unnotarized, so macOS may require approval in Privacy & Security before their first run.
