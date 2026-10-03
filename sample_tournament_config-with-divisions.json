@@ -1,6 +1,5 @@
 {
   "INFO": {
-    "season_name": "Unearthed",
     "season_year": "2025",
     "tournament_short_name": "Norfolk",
     "tournament_long_name": "Norfolk 2025 Unearthed Qualifier Tournament",
@@ -15,7 +14,10 @@
         "division": "D2",
         "filename": "2025-fll-challenge-Unearthed-ojs-Norfolk-div2.xlsm"
       }
-    ]
+    ],
+    "ceremony": {
+      "program_season_name": "Unearthed"
+    }
   },
   "AWARDS": [
     {

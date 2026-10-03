@@ -50,11 +50,11 @@
 
 <p><span class="highlight1"><i>The Emcee can announce each team as they move through a line of volunteers to receive their tournament ribbons. You might want to funnel them into a "reserved for teams" seating area in the stands.</i></span></p>
 
-<p><span class="highlight0">We started this tournament with a shared mission: to innovate, to learn, and to celebrate the UNEARTHED season. Every single team brought something special, and we've seen amazing robots, brilliant solutions, and above all, incredible teamwork. Today, each of you has embodied the values of FIRST LEGO League - discovery, impact, inclusion, innovation, teamwork, and fun!</span></p>
+<p><span class="highlight0">We started this tournament with a shared mission: to innovate, to learn, and to celebrate the {{ ceremony.program_season_name|e }} season. Every single team brought something special, and we've seen amazing robots, brilliant solutions, and above all, incredible teamwork. Today, each of you has embodied the values of FIRST LEGO League - discovery, impact, inclusion, innovation, teamwork, and fun!</span></p>
 
 <p><span class="highlight1">Teams - Congratulations on a great season! The journey that got you to this point defines each one of you as a FIRST LEGO League champion and winner, and this tournament ribbon celebrates this achievement.</span></p>
 
-<p><span class="highlight0">We want to thank our FIRST LEGO League Global Sponsors, LEGO Education and The LEGO Foundation.  We also want to say a big thank you to our tournament sponsors; James Madison University's Division of Research, Economic Development, and Innovation.</span></p>
+<p><span class="highlight0">{{ ceremony.sponsor_acknowledgement|e }}</span></p>
 
 <p><span class="highlight1">Before we get to the team awards, we want to take a moment to recognize our volunteers. Volunteers - please stand and wave to the crowd! Teams - please give a round of applause for our volunteers. No words can adequately express our appreciation for you.</span></p>
 
@@ -68,7 +68,9 @@
 
 <p><span class="highlight1">Coaches and mentors - please stand. You all have inspired, encouraged, and motivated your team, all the while demonstrating and modeling Gracious Professionalism®. Teams, take a moment to tell your coaches how much you appreciate all they have done for you.</span></p>
 
-<p><span class="highlight0">If you would like to nominate your coach or mentor for a Virginia-DC FIRST LEGO League Challenge Coach/ Mentor Award, go to va-dcfll.org to read more about the award and submit your digital nomination!</span></p>
+{% if ceremony.coach_nomination_announcement %}
+<p><span class="highlight0">{{ ceremony.coach_nomination_announcement|e }}</span></p>
+{% endif %}
 
 <p><span class="highlight1">So let's play a quick game. Coaches, mentors, and Event Volunteers - Stand (or if you are standing, raise your hand). We have volunteers - coaches and event volunteers who keep coming back year and after year, giving their time, expertise and support.</span></p>
 
@@ -76,7 +78,7 @@
 
 <h2>Robot Performance Awards</h2>
 
-<p><span class="highlight1">Now on to the Team Awards!  We begin with the Robot Performance Awards.  This award celebrates teams that score the most points during the Robot Game. Teams have a chance to compete in three two-and-a-half-minute matches and their highest score counts.</span></p>
+<p><span class="highlight1">Now on to the Team Awards!  We begin with the Robot Performance Awards.  This award celebrates teams that score the most points during the Robot Game. Teams have a chance to compete in Robot Game matches and their highest score counts.</span></p>
 
 <!-- Robot Game Scores -->
 {{ P_AWD_RG_D1|safe }}
@@ -87,7 +89,7 @@
 
 <p><span class="highlight0">Congratulations on those Robot Performance Awards!  Such amazing robot action from all teams today.  Now, we moved on to the Judged Awards.  First the Innovation Project Award.</span></p>
 
-<p><span class="highlight1">During our archeology-themed season, {{ ip_this_these }} utilized diverse resources for their Innovation Project to help them gain a comprehensive understanding of the problem they identified, developed a creative, well-researched solution and effectively communicated their findings to judges and the community.</span></p>
+<p><span class="highlight1">During the {{ ceremony.program_season_name|e }} season, {{ ip_this_these }} utilized diverse resources for their Innovation Project to help them gain a comprehensive understanding of the problem they identified, developed a creative, well-researched solution and effectively communicated their findings to judges and the community.</span></p>
 
 {{ J_AWD_IP_D1|safe }}
 
@@ -119,7 +121,7 @@
 {% endif %}
 
 <h2>Other Recognition</h2>
-<p><span class="highlight0">Before we announce our final award, let's take a quick moment to acknowledge those teams who are with us for the last time. Please stand if you are in 8th grade and aging out of FIRST LEGO League at the end of this season! We want to congratulate you for everything you've achieved, and we hope to see you continue your robotics journey on a FIRST<sup>&#174;</sup> Tech Challenge or FIRST<sup>&#174;</sup> Robotics Competition Team next year!</span></p>
+<p><span class="highlight0">Before we announce our final award, let's take a quick moment to acknowledge those teams who are with us for the last time. Please stand if you are aging out of FIRST LEGO League at the end of this season! We want to congratulate you for everything you've achieved, and we hope to see you continue your robotics journey on a FIRST<sup>&#174;</sup> Tech Challenge or FIRST<sup>&#174;</sup> Robotics Competition Team next year!</span></p>
 
 <p><span class="highlight1">Now, let's hear it for our FIRST alumni. If you are a coach, volunteer, or supporter with us today and graduated from a FIRST program, please stand. Teams, we hope to see you join these ranks someday!</span></p>
 
@@ -131,19 +133,16 @@
 {{ J_AWD_CHAMP_D2|safe }}
 
 
+{% if ADV %}
 <h2>Advancing Teams</h2>
-<p><span class="highlight1">Wow! A huge congratulations to our Champions Award winning teams.  We know you will go on to represent our tournament well at the Virginia and Washington, DC FIRST LEGO League Challenge Championship.  Here is the complete list of teams that will move on to compete in that championship event at James Madison University.  Division 1 teams will compete on Saturday, January 10th and Division 2 teams will compete on Sunday, January 11th:</span></p>
-
-{% if ADV != "" %}
+<p><span class="highlight1">{{ ceremony.advancement_announcement|e }}</span></p>
 <p><span class="highlight0">The teams that are advancing are</span></p>
 {{ ADV_D1|safe }}
-
 {{ ADV_D2|safe }}
-
 {% endif %}
 
 <h2>Closing</h2>
-<p><span class="highlight0">Friends, this concludes the Awards Ceremony for this year's season, UNEARTHED, part of the FIRST AGE season. Please join me in congratulating all the teams on their fantastic performance! Just as a reminder, teams will receive their rubrics <i>[insert how teams receive their rubrics here]</i>. But, this isn't goodbye. We hope you can join us next season for more STEM fun! To learn more about our other programs, visit our website at www.firstinspires.org.</span></p>
+<p><span class="highlight0">Friends, this concludes the Awards Ceremony for this year's season, {{ ceremony.program_season_name|e }}. Please join me in congratulating all the teams on their fantastic performance! Just as a reminder, teams will receive their rubrics <i>{{ ceremony.rubric_instructions|e }}</i>. But, this isn't goodbye. We hope you can join us next season for more STEM fun! To learn more about our other programs, visit our website at {{ ceremony.program_website|e }}.</span></p>
 
 <p><span class="highlight1">Thank you for being here, and for supporting all of these amazing students. We look forward to seeing you all again next year! Get home safely!</span></p>
 

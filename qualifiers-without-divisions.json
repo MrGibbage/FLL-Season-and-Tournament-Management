@@ -1,11 +1,10 @@
 {
   "robot_game_max_score": 530,
-  "season_yr": "2025",
-  "season_name": "Unearthed",
+  "season_yr": "2026",
   "notes_filename": "This is the excel file with the list of all tournaments",
-  "filename": "2025-FLL-Qualifier-Tournaments-without-divisions.xlsx",
+  "filename": "2026-FLL-Qualifier-Tournaments-without-divisions.xlsx",
   "notes_template": "This is the template OJS that will be copied into each of the tournament folders (after being modified for each tournament)",
-  "tournament_template": "2025-Qualifier-Template-without-divisions.xlsm",
+  "tournament_template": "2026-Qualifier-Template-without-divisions.xlsm",
   "fillin_template": "fillin_template-without-divisions.html.jinja",
   "notes_copy_file_lists": "Files to copy into tournament folders. Common files are always copied. Division-specific files are copied based on using_divisions setting. Each entry maps source filename to destination filename.",
   "copy_file_list_common": [
@@ -27,5 +26,16 @@
     }
   ],
   "notes_tournament_folder": "IMPORTANT: Set this to the folder where you want all tournament folders to be created. Use forward slashes (/) for paths on ALL platforms (Windows, Mac, Linux). The folder will be created automatically if it doesn't exist. Examples: Windows: 'C:/tournaments' or 'C:/Users/YourName/Documents/tournaments', Mac/Linux: '/Users/YourName/tournaments'",
-  "tournament_folder": "C:/github-projects/FLL-Season-and-Tournament-Management/tournaments"
+  "tournament_folder": "C:/github-projects/FLL-Season-and-Tournament-Management/tournaments",
+  "ceremony": {
+    "program_season_name": "Bioglow",
+    "sponsor_acknowledgement": "We want to thank our FIRST LEGO League Global Sponsors, LEGO Education and The LEGO Foundation. We also want to say a big thank you to our tournament sponsors; James Madison University's Division of Research, Economic Development, and Innovation.",
+    "coach_nomination_announcement": "If you would like to nominate your coach or mentor for a Virginia-DC FIRST LEGO League Challenge Coach/Mentor Award, go to va-dcfll.org to read more about the award and submit your digital nomination!",
+    "advancement_announcement": "Congratulations to the teams advancing to the Virginia and Washington, DC FIRST LEGO League Challenge Championship!",
+    "rubric_instructions": "[insert how teams receive their rubrics here]",
+    "program_website": "www.firstinspires.org"
+  },
+  "using_divisions": false,
+  "tournament_name_format": "{short_name} {season_year} {program_season_name} Qualifier Tournament",
+  "ojs_filename_format": "{season_year}-vadc-fll-challenge-{program_season_name}-ojs-{short_name}{division}.xlsm"
 }

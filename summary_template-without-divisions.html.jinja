@@ -36,18 +36,21 @@
 <h2>Core Values Award</h2>
 {{ J_AWD_CV|safe }}
 
+{% if J_AWD_Judges %}
 <h2>Judge's Award</h2>
 {{ J_AWD_Judges|safe }}
+{% endif %}
 
-<h2>Foobar Award</h2>
-{{ J_AWD_Foo|safe }}
+
 
 <h2>Champion's Award</h2>
 {{ J_AWD_CHAMP|safe }}
 
+{% if ADV %}
 <h2>Advancing Teams</h2>
 <p><span class="highlight0">The teams that are advancing are</span></p>
 {{ ADV|safe }}
 
+{% endif %}
 </body>
 </html>

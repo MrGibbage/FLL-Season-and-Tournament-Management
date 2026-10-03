@@ -319,8 +319,8 @@ def generate_tournament_config(
 
         info_section = {
             "robot_game_max_score": config.get("robot_game_max_score", 530),
-            "season_name": config.get("season_name", ""),
             "season_year": config.get("season_yr", ""),
+            "ceremony": config.get("ceremony", {}),
             "tournament_short_name": tourn_short,
             "tournament_long_name": tournament.get(COL_LONG_NAME, ""),
             "tournament_date": tourn_date,

@@ -135,7 +135,7 @@ class CeremonyDataCollector:
         
         return "\n".join(html_lines)
     
-    def format_winners_as_html(self, winners: List[AwardWinner], include_score: bool = False) -> str:
+    def format_winners_as_html(self, winners: List[AwardWinner], include_score: bool = False, division: str = "") -> str:
         """Format award winners as HTML paragraphs with highlighting.
         
         Args:
@@ -152,6 +152,9 @@ class CeremonyDataCollector:
         # Present awards in reverse ranking order (e.g., 3rd → 2nd → 1st)
         for winner in reversed(winners):
             parts = []
+
+            if division:
+                parts.append(escape(division))
 
             # Add label if present
             if winner.label:

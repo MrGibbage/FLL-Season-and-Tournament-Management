@@ -31,6 +31,7 @@ import pandas as pd
 import json
 
 # Import from modules
+from modules.season_config import program_season_name, using_divisions as config_using_divisions, tournament_identity
 from modules.logger import setup_logger, print_error
 from modules.constants import *
 from modules.file_operations import (
@@ -39,7 +40,7 @@ from modules.file_operations import (
     copy_files,
     generate_tournament_config,
 )
-from modules.excel_operations import read_table_as_df, read_table_as_dict, verify_workbooks_closed
+from modules.excel_operations import read_table_as_df, verify_workbooks_closed
 from modules.worksheet_setup import (
     set_up_tapi_worksheet,
     set_up_award_worksheet,
@@ -109,7 +110,6 @@ def find_season_config_files(directory: str) -> list[str]:
     # Required keys for a valid season config
     required_keys = {
         "season_yr",
-        "season_name",
         "tournament_folder",
         "filename",
         "tournament_template",
@@ -128,6 +128,8 @@ def find_season_config_files(directory: str) -> list[str]:
 
             # Check if all required keys are present
             if required_keys.issubset(data.keys()):
+                program_season_name(data)
+                config_using_divisions(data)
                 valid_files.append(filename)
                 logger.debug(f"✓ Valid season config: {filename}")
             else:
@@ -267,15 +269,19 @@ def validate_environment(
         "filename",
         "tournament_template",
         "season_yr",
-        "season_name",
         "tournament_folder",
     ]
     missing = [k for k in required_config_keys if k not in config]
+    try:
+        program_season_name(config)
+        config_using_divisions(config)
+    except ValueError as exc:
+        missing.append(str(exc))
     if missing:
         summary.add_error(f"Missing config keys: {', '.join(missing)}")
     else:
         summary.add_info(
-            f"Configuration valid: {config.get('season_name')} {config.get('season_yr')}"
+            f"Configuration valid: {program_season_name(config)} {config.get('season_yr')}"
         )
 
     # Check that workbooks are closed
@@ -436,7 +442,7 @@ def main():
             error_type="missing_config",
             context={
                 "directory": dir_path,
-                "required_keys": "season_yr, season_name, tournament_folder, filename, tournament_template",
+                "required_keys": "season_yr, ceremony.program_season_name, using_divisions, tournament_folder, filename, tournament_template",
             },
         )
         input("\nPress ENTER to exit...")
@@ -541,24 +547,9 @@ def main():
             context={"filename": os.path.basename(tournament_file)},
         )
 
-    # Read season info
-    try:
-        dictSeasonInfo = read_table_as_dict(tournament_file, "SeasonInfo", "SeasonInfo")
-        divisions_value = dictSeasonInfo["Divisions"]
-
-        # Convert to boolean (handle string, bool, int)
-        if isinstance(divisions_value, bool):
-            using_divisions = divisions_value
-        elif isinstance(divisions_value, str):
-            using_divisions = divisions_value.upper() in ["TRUE", "YES", "1"]
-        elif isinstance(divisions_value, (int, float)):
-            using_divisions = bool(divisions_value)
-        else:
-            using_divisions = False
-
-        logger.info(f"Using divisions: {using_divisions} (from value: {divisions_value})")
-    except Exception as e:
-        print_error(logger, "Could not read the SeasonInfo table", e)
+    # The season JSON is authoritative; workbook SeasonInfo is informational only.
+    using_divisions = config_using_divisions(config)
+    logger.info(f"Using divisions: {using_divisions} (from season JSON)")
 
     # Read tournaments
     try:
@@ -570,6 +561,10 @@ def main():
             dfTournaments = read_table_as_df(
                 tournament_file, "Tournaments", "TournamentList"
             ).fillna(0)
+        for index, tournament in dfTournaments.iterrows():
+            for key, value in tournament_identity(tournament, config).items():
+                dfTournaments.at[index, key] = value
+        logger.info("Workbook Long Name and OJS_FileName columns are ignored; names come from season JSON")
         logger.info(f"Loaded {len(dfTournaments)} tournament(s)")
     except Exception as e:
         print_error(logger, "Could not read the tournament worksheet", e)

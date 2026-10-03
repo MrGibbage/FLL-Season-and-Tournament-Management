@@ -17,6 +17,7 @@ import json
 import logging
 import warnings
 import argparse
+import re
 from colorama import init, Fore, Style
 
 
@@ -32,7 +33,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from modules.logger import setup_logger, print_error
 from modules.ceremony_validator import OJSValidator
 from modules.ceremony_data_collector import CeremonyDataCollector
-from modules.ceremony_renderer import CeremonyRenderer
+from modules.ceremony_renderer import CeremonyRenderer, ceremony_context
 from modules.ceremony_workbooks import CeremonyWorkbooks
 
 # Initialize colorama
@@ -114,10 +115,12 @@ def load_config(config_path: str) -> dict:
 
 
 def generate_output_filename(ojs_files: list, suffix: str = "closing-ceremony") -> str:
-    """Generate output filename based on the first OJS filename."""
+    """Use the first OJS stem, omitting its division suffix for combined output."""
     first = ojs_files[0]
     filename = first["filename"] if isinstance(first, dict) else str(first)
     base_name = os.path.splitext(os.path.basename(filename))[0]
+    if len(ojs_files) > 1:
+        base_name = re.sub(r"[-_ ]?(?:D|div)[12]$", "", base_name, flags=re.IGNORECASE)
     output_name = f"{base_name}-{suffix}.html"
     logger.debug(f"Generated output filename: {output_name}")
     return output_name
@@ -409,7 +412,7 @@ def main(workbooks=None):
 
     print_header("COLLECTING AWARD DATA")
     collector = CeremonyDataCollector(config, dual_emcee=dual_emcee, workbooks=workbooks)
-    template_data = {}
+    template_data = ceremony_context(info)
     template_data["tournament_name"] = info["tournament_long_name"]
     template_data["using_divisions"] = 1 if using_divisions else 0
     template_data["dual_emcee"] = dual_emcee
@@ -438,6 +441,8 @@ def main(workbooks=None):
                 "path": os.path.join(base_dir, entry["filename"]),
             }
         )
+
+    division_entries.sort(key=lambda entry: entry["code"])
 
     print("Collecting team lists...")
     if using_divisions:
@@ -485,7 +490,7 @@ def main(workbooks=None):
                         tag = award.get(tag_field, "") if tag_field else ""
                         if tag:
                             template_data[tag] = collector.format_winners_as_html(
-                                rg, include_score=True
+                                rg, include_score=True, division=entry["label"]
                             )
             else:
                 tourn_count = int(award.get("TournCount", 0))
@@ -515,7 +520,7 @@ def main(workbooks=None):
                     tag_field = f"ScriptTag{entry['code']}" if entry["code"] else ""
                     tag = award.get(tag_field, "") if tag_field else ""
                     if tag:
-                        template_data[tag] = collector.format_winners_as_html(winners)
+                        template_data[tag] = collector.format_winners_as_html(winners, division=entry["label"])
 
                     if award_id == "J_AWD_IP" and "ip_this_these" not in template_data:
                         template_data["ip_this_these"] = (

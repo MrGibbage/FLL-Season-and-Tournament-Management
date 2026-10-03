@@ -8,6 +8,27 @@ from jinja2 import Environment, FileSystemLoader, TemplateNotFound, meta, Strict
 logger = logging.getLogger("ceremony_generator")
 
 
+def ceremony_context(info):
+    """Configuration shared by ceremony templates; older configs use neutral text."""
+    defaults = {
+        "program_season_name": "",
+        "sponsor_acknowledgement": "We want to thank all of our sponsors for supporting this tournament.",
+        "coach_nomination_announcement": "",
+        "advancement_announcement": "Congratulations to the teams advancing to the next event!",
+        "rubric_instructions": "[insert how teams receive their rubrics here]",
+        "program_website": "www.firstinspires.org",
+    }
+    defaults.update(info.get("ceremony", {}))
+    # Read old tournament folders without requiring regeneration. New files only
+    # store ceremony.program_season_name.
+    if not defaults["program_season_name"]:
+        defaults["program_season_name"] = info.get("season_name") or "current"
+    return {
+        "season_year": info.get("season_year", ""),
+        "ceremony": defaults,
+    }
+
+
 class CeremonyRenderer:
     """Handles Jinja template rendering for ceremony scripts."""
 

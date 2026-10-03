@@ -85,7 +85,7 @@ Once you download the repo, do the following:
 5) Enter a tournament name to build one, or press ENTER to build all. Watch for warnings/errors.
 6) When builds succeed, share the generated tournament folders via your preferred cloud service (OneDrive, Google Drive, Dropbox) with tournament directors and judge advisors.
 
-**Note**: MAESTRO automatically scans for all `.json` files and validates them. Only files containing the required configuration keys (`season_yr`, `season_name`, `tournament_folder`, `filename`, `tournament_template`) will be shown as options.
+**Note**: MAESTRO automatically scans for all `.json` files and validates them. Only files containing the required configuration keys (`season_yr`, `ceremony.program_season_name`, `using_divisions`, `tournament_folder`, `filename`, `tournament_template`) will be shown as options.
 
 ### OJS usage
 
@@ -116,8 +116,9 @@ Each configuration file should follow this structure:
 
 ```json
 {
-  "season_yr": "2025",
-  "season_name": "SUBMERGED",
+  "season_yr": "2026",
+  "using_divisions": true,
+  "ceremony": {"program_season_name": "Bioglow"},
   "filename": "2025-FLL-Qualifier-Tournaments.xlsx",
   "tournament_template": "2025-Qualifier-Template.xlsm",
   "tournament_folder": "C:/Users/username/Documents/tournaments",
@@ -140,8 +141,9 @@ Each configuration file should follow this structure:
 ### Configuration Keys
 
 **Required keys** (MAESTRO validates these):
+- `using_divisions`: Required boolean; selects the division or non-division tournament table.
 - `season_yr`: Tournament season year
-- `season_name`: FLL season theme name
+- `ceremony.program_season_name`: FLL season theme name
 - `filename`: Excel file with tournament list and assignments
 - `tournament_template`: OJS template file to copy
 - `tournament_folder`: Root folder where tournament subfolders will be created
@@ -266,3 +268,67 @@ Log files are automatically created with timestamps in the script directory:
 ## Development
 
 Comfortable editing Python? Clone the repo and see [DEVELOPMENT.md](DEVELOPMENT.md) for environment setup, tests, local executable builds, and version-tagged releases.
+
+### Ceremony wording across seasons
+
+Both ceremony scripts use `INFO.ceremony.program_season_name` from `tournament_config.json`
+(MAESTRO copies it from the season JSON's `ceremony.program_season_name`). No template edit is
+needed when the season changes. `season_year` is also available to custom templates. Keep the year at the top
+level as `season_yr` in season JSON (`INFO.season_year` in tournament JSON):
+it controls workbook metadata and identifies the season beyond the ceremony.
+
+The season JSON can include a `ceremony` object, copied to `INFO.ceremony` in new
+tournament configurations. The qualifier JSON files include editable examples:
+
+- `program_season_name`: required FLL season name, such as `Bioglow`.
+- `sponsor_acknowledgement`: complete sponsor thank-you text.
+- `coach_nomination_announcement`: complete nomination instructions; blank omits them.
+- `advancement_announcement`: destination, venue, and dates as a complete announcement.
+- `rubric_instructions`: how teams receive their rubrics.
+- `program_website`: website mentioned at closing.
+
+These fields are plain text and are HTML-escaped. Older configurations use neutral
+wording, omit optional nomination text, and retain a visible rubric reminder.
+Advancement announcements appear only when there are advancing teams. The scripts
+no longer assume an eighth-grade age limit, a season theme, or championship dates.
+The placeholder Foobar award was removed; Breakthrough recognition appears only
+when winners are present. Core award descriptions and the D1/D2 structure remain
+part of the templates and the application's existing award model.
+
+Existing tournament folders retain their copied templates and configuration.
+To update them, copy the matching script and summary templates into the folder
+using its configured filenames, and update `INFO.ceremony.program_season_name` and `INFO.ceremony`
+in its `tournament_config.json`. MAESTRO preserves existing INFO settings when
+updating a folder, so editing the season JSON alone does not update existing folders.
+
+### Authoritative season settings
+
+The season JSON owns `season_yr`, `ceremony.program_season_name`, and the required
+boolean `using_divisions`. MAESTRO does not read the workbook's `SeasonInfo` table.
+The workbook's `Long Name` and `OJS_FileName` columns are legacy informational
+fields: MAESTRO ignores them and generates both values in memory from JSON.
+There is no need to maintain those cells or their cached formula results.
+
+The qualifier JSON files define these formats:
+
+```json
+"using_divisions": true,
+"tournament_name_format": "{short_name} {season_year} {program_season_name} Qualifier Tournament",
+"ojs_filename_format": "{season_year}-vadc-fll-challenge-{program_season_name}-ojs-{short_name}{division}.xlsm"
+```
+
+Available substitutions are `short_name`, `season_year`, `program_season_name`,
+and `division` (empty for events without divisions). Customize the formats for
+other event types or regions. The workbook still supplies tournament short names,
+division assignments, actual dates, teams, and award/advancement allocations.
+Dates are event data and are not inferred from the season year.
+
+Generated OJS metadata and tournament JSON carry copies of the season settings
+for standalone tournament use. TOAST reads that tournament JSON; it does not need
+the original season workbook or season JSON. Existing tournament folders do not
+change merely because the season JSON changes. Rebuilding can replace tournament
+workbooks, so preserve scored event files before rebuilding.
+
+The OJS templates' cell values and formulas contain no explicit 2025/2026 or
+Unearthed/Bioglow branding. Their scoring structure remains tied to the official
+judging workbook; selecting a new season JSON does not update official rubrics.

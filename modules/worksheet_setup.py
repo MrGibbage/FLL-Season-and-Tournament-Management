@@ -1,5 +1,7 @@
 """Worksheet setup functions for tournament OJS files."""
 
+from .season_config import program_season_name
+
 import os
 import logging
 import pandas as pd
@@ -325,14 +327,14 @@ def set_up_meta_worksheet(
     scriptfile = os.path.join(tournament_folder, tournament[COL_SHORT_NAME], FILE_CLOSING_CEREMONY)
 
     # Validate required config keys
-    required_keys = ["season_yr", "season_name"]
+    required_keys = ["season_yr"]
     for key in required_keys:
         if key not in config:
             print_error(logger, f"Missing required configuration key: '{key}' in {CONFIG_FILENAME}")
 
     dfMeta = pd.DataFrame(columns=["Key", "Value"])
     dfMeta.loc[len(dfMeta)] = {"Key": "Tournament Year", "Value": config["season_yr"]}
-    dfMeta.loc[len(dfMeta)] = {"Key": "FLL Season Title", "Value": config["season_name"]}
+    dfMeta.loc[len(dfMeta)] = {"Key": "FLL Season Title", "Value": program_season_name(config)}
     dfMeta.loc[len(dfMeta)] = {"Key": "Tournament Short Name", "Value": tournament[COL_SHORT_NAME]}
     dfMeta.loc[len(dfMeta)] = {"Key": "Tournament Long Name", "Value": tournament[COL_LONG_NAME]}
     dfMeta.loc[len(dfMeta)] = {"Key": "Completed Script File", "Value": scriptfile}
