@@ -27,7 +27,7 @@ class ScoringSetupTests(unittest.TestCase):
             (False, "Cinderbrook", [3]),
         ]:
             suffix = "with-divisions" if divisions else "without-divisions"
-            source = ROOT / f"2025-FLL-Qualifier-Tournaments-{suffix}.xlsx"
+            source = ROOT / f"2026-FLL-Qualifier-Tournaments-{suffix}.xlsx"
             sheet, table = ("DivTournaments", "DivTournamentList") if divisions else (
                 "Tournaments", "TournamentList"
             )
@@ -52,7 +52,7 @@ class ScoringSetupTests(unittest.TestCase):
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", UserWarning)
                         book = openpyxl.load_workbook(
-                            ROOT / f"2025-Qualifier-Template-{suffix}.xlsm", keep_vba=True
+                            ROOT / f"2026-Qualifier-Template-{suffix}.xlsm", keep_vba=True
                         )
                     self.assertTrue(set_up_tapi_worksheet(
                         tournament, book, assignments, divisions

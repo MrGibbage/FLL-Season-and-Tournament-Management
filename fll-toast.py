@@ -22,7 +22,7 @@ from colorama import init, Fore, Style
 
 
 # Application version. Edit manually as needed.
-TOAST_VERSION = "1.00.01"
+TOAST_VERSION = "1.00.02"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)

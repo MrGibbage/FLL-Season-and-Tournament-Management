@@ -39,6 +39,12 @@
 - No changes to MAESTRO other than version bump.
 - Version bump to 1.00.01.
 
+## 1.00.02
+- Include ceremony configuration in TOAST's template data so season-aware templates render in downloaded builds.
+- Generate tournament names and OJS filenames from season JSON, and label division awards in scripts.
+- Remove division suffixes from combined ceremony filenames; keep single-division suffixes.
+- Refresh 2026 Bioglow qualifier workbooks and templates.
+
 ## Unreleased / Next
 - TOAST supports local tournament/output paths, caches workbook reads, supports both team-list naming conventions, and stops on missing template data or collection failures.
 - Added configurable robot-game maximum (530 by default), integer score checks, saved-calculation checks, team consistency, award allocation, and advancement validation.
