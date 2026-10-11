@@ -46,35 +46,30 @@ jobs:
       - name: Run tests
         run: uv run --no-sync python -m unittest discover -s tests -v
 
-      - name: Build executables
-        run: |
-          uv run --no-sync python -m PyInstaller --noconfirm --clean fll-maestro.spec
-          uv run --no-sync python -m PyInstaller --noconfirm --clean fll-toast.spec
+      - name: Build TOAST executable
+        run: uv run --no-sync python -m PyInstaller --noconfirm --clean fll-toast.spec
 
-      - name: Smoke test Windows executables
+      - name: Smoke test Windows executable
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          & .\dist\fll-maestro.exe --help
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & .\dist\fll-toast.exe --help
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Smoke test macOS executables
+      - name: Smoke test macOS executable
         if: runner.os == 'macOS'
         run: |
-          ./dist/fll-maestro --help
           ./dist/fll-toast --help
 
-      - name: Package Windows executables
+      - name: Package Windows executable
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path dist\fll-maestro.exe,dist\fll-toast.exe -DestinationPath "${{ matrix.archive }}"
+        run: Compress-Archive -Path dist\fll-toast.exe -DestinationPath "${{ matrix.archive }}"
 
-      - name: Package macOS executables
+      - name: Package macOS executable
         if: runner.os == 'macOS'
         run: |
-          tar -czf "${{ github.workspace }}/${{ matrix.archive }}" -C dist fll-maestro fll-toast
+          tar -czf "${{ github.workspace }}/${{ matrix.archive }}" -C dist fll-toast
           test -f "${{ github.workspace }}/${{ matrix.archive }}"
 
       - uses: actions/upload-artifact@v7

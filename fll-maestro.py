@@ -1,5 +1,5 @@
 # Manual version string (edit as needed)
-MAESTRO_VERSION = "1.00.07"
+MAESTRO_VERSION = "1.00.08"
 
 # ...existing code...
 
@@ -569,11 +569,11 @@ def main():
     try:
         if using_divisions:
             dfTournaments = read_table_as_df(
-                tournament_file, "DivTournaments", "DivTournamentList"
+                tournament_file, "Two Divisions", "DivTournamentList"
             ).fillna(0)
         else:
             dfTournaments = read_table_as_df(
-                tournament_file, "Tournaments", "TournamentList"
+                tournament_file, "Single Division", "TournamentList"
             ).fillna(0)
         for index, tournament in dfTournaments.iterrows():
             for key, value in tournament_identity(tournament, config).items():
@@ -676,7 +676,7 @@ def main():
                 f"Cannot build {next(iter(shared_award_errors))}: shared award allocations "
                 "must match in every division.",
                 error_type="invalid_data",
-                context={"location": "DivTournaments"},
+                context={"location": "Two Divisions"},
             )
 
         print_warning(

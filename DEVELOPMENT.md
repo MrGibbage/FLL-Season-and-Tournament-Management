@@ -60,28 +60,26 @@ Both `team_list_D1/D2` and the legacy `div1_list/div2_list` template names work.
 
 PyInstaller must build on the operating system that will run the binary. A Windows build cannot produce the Mac executables, and a Mac build cannot produce the Windows executable.
 
-Use the checked-in specification files rather than passing `-F` directly:
+Use the checked-in TOAST specification rather than passing `-F` directly:
 
 ```powershell
-.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean fll-maestro.spec
 .venv\Scripts\python.exe -m PyInstaller --noconfirm --clean fll-toast.spec
 ```
 
 The results are written to `dist/`:
 
-- Windows: `dist/fll-maestro.exe` and `dist/fll-toast.exe`
-- macOS: `dist/fll-maestro` and `dist/fll-toast`
+- Windows: `dist/fll-toast.exe`
+- macOS: `dist/fll-toast`
 
-Smoke-test both programs before distribution:
+Smoke-test TOAST before distribution:
 
 ```powershell
-dist\fll-maestro.exe --help
 dist\fll-toast.exe --help
 ```
 
-On macOS, use `./dist/fll-maestro --help` and `./dist/fll-toast --help`.
+On macOS, use `./dist/fll-toast --help`.
 
-The executables contain Python and all Python dependencies. They do not contain season JSON files, OJS workbooks, instructions, or Jinja templates. MAESTRO must remain beside its regional configuration and source files. TOAST must be delivered with each generated tournament folder and its configuration, workbook, and templates.
+The TOAST executable contains Python and all Python dependencies. It does not contain season JSON files, OJS workbooks, instructions, or Jinja templates. Run MAESTRO from source beside its regional configuration and source files. TOAST must be delivered with each generated tournament folder and its configuration, workbook, and templates.
 
 Executables are ignored by Git and distributed through the release archives. For source-mode MAESTRO on Windows, copy `dist/fll-toast.exe` or the released `fll-toast.exe` beside `fll-maestro.py`. For cross-platform tournament folders, also put each Mac TOAST binary there under the names `fll-toast-macos-intel` and `fll-toast-macos-apple-silicon`; MAESTRO copies these extra builds when present. The source workbooks (`.xlsx`/`.xlsm`) and `instructions.pdf` remain tracked.
 
@@ -93,9 +91,9 @@ The **Build release binaries** workflow in `.github/workflows/build-release.yml`
 
 1. Install Python 3.14 and the dependency versions in `uv.lock`.
 2. Run test discovery. Fixture-independent tests run on every hosted runner; tests that require the ignored Dunford tournament report as skipped.
-3. Build MAESTRO and TOAST from their PyInstaller specifications.
-4. Run each executable with `--help` as a smoke test.
-5. Package both programs for Windows x64, Intel Mac, and Apple silicon Mac.
+3. Build TOAST from its PyInstaller specification.
+4. Run the executable with `--help` as a smoke test.
+5. Package TOAST for Windows x64, Intel Mac, and Apple silicon Mac.
 
 ### Test build without a release
 
@@ -108,13 +106,13 @@ The artifacts are temporary CI outputs. This path does not create a tag or a Git
 
 ### Versioned release
 
-1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same new three-part version, such as `1.00.07`.
+1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same new three-part version, such as `1.00.08`.
 2. Run the tests and commit and push the version change.
 3. Create the matching annotated tag and push it:
 
    ```powershell
-   git tag -a v1.00.07 -m v1.00.07
-   git push orgin v1.00.07
+   git tag -a v1.00.08 -m v1.00.08
+   git push orgin v1.00.08
    ```
 
 4. GitHub validates that the tag matches both embedded versions, then builds and tests all three platforms.

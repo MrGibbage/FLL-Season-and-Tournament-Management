@@ -22,7 +22,7 @@ from colorama import init, Fore, Style
 
 
 # Application version. Edit manually as needed.
-TOAST_VERSION = "1.00.07"
+TOAST_VERSION = "1.00.08"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -639,6 +639,9 @@ def main(workbooks=None):
         for key in ['ScriptTagD1', 'ScriptTagD2', 'ScriptTagNoDiv']:
             if award.get(key):
                 template_data.setdefault(award[key], '')
+    # The non-division script has an optional Breakthrough section. Some
+    # tournaments do not allocate that award at all.
+    template_data.setdefault('J_AWD_BT', '')
 
     # Set ja_count to 0 if not already set (must be int for template comparison)
     if "ja_count" not in template_data:

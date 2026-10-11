@@ -183,7 +183,10 @@ class MissingAwardTests(unittest.TestCase):
             (base / "test.xlsm").touch()
             (base / "tournament_config.json").write_text(json.dumps(config))
             for filename in ("script.jinja", "summary.jinja"):
-                (base / filename).write_text("{{ J_AWD_CV|safe }} {{ J_AWD_Judges|safe }}")
+                template = "{{ J_AWD_CV|safe }} {{ J_AWD_Judges|safe }}"
+                if filename == "script.jinja":
+                    template += "{% if J_AWD_BT %}Breakthrough Award: {{ J_AWD_BT|safe }}{% endif %}"
+                (base / filename).write_text(template)
             output = base / "output"
             argv = ["toast", "--tournament-dir", folder, "--output-dir", str(output)]
             try:
@@ -209,6 +212,7 @@ class MissingAwardTests(unittest.TestCase):
                 self.assertIn("Core Values 1st Place: NONE", script)
                 self.assertIn("Judges Award: Team 1, Alpha", script)
                 self.assertIn("Judges Award: NONE", script)
+                self.assertNotIn("Breakthrough Award", script)
             finally:
                 logger = logging.getLogger("ceremony_generator")
                 for handler in list(logger.handlers):

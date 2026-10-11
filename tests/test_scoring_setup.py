@@ -28,8 +28,8 @@ class ScoringSetupTests(unittest.TestCase):
         ]:
             suffix = "with-divisions" if divisions else "without-divisions"
             source = ROOT / f"2026-FLL-Qualifier-Tournaments-{suffix}.xlsx"
-            sheet, table = ("DivTournaments", "DivTournamentList") if divisions else (
-                "Tournaments", "TournamentList"
+            sheet, table = ("Two Divisions", "DivTournamentList") if divisions else (
+                "Single Division", "TournamentList"
             )
             tournaments = read_table_as_df(str(source), sheet, table).fillna(0)
             awards = read_table_as_df(str(source), "AwardDef", "AwardDef").fillna(0)
