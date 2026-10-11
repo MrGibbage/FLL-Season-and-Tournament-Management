@@ -38,6 +38,16 @@ def companion_toast_mapping(platform: str | None = None) -> dict[str, str]:
     return {"source": executable, "dest": executable}
 
 
+def available_toast_mappings(directory: str, platform: str | None = None) -> list[dict[str, str]]:
+    """Include the host TOAST binary and any extra platform builds on hand."""
+    host = companion_toast_mapping(platform)
+    mappings = [host]
+    for name in ("fll-toast.exe", "fll-toast-macos-intel", "fll-toast-macos-apple-silicon"):
+        if name != host["source"] and os.path.isfile(os.path.join(directory, name)):
+            mappings.append({"source": name, "dest": name})
+    return mappings
+
+
 def _remove_note_keys(obj: Any) -> Any:
     """Recursively strip out any dict keys beginning with 'note' (case-insensitive).
 

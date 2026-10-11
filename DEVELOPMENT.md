@@ -83,6 +83,8 @@ On macOS, use `./dist/fll-maestro --help` and `./dist/fll-toast --help`.
 
 The executables contain Python and all Python dependencies. They do not contain season JSON files, OJS workbooks, instructions, or Jinja templates. MAESTRO must remain beside its regional configuration and source files. TOAST must be delivered with each generated tournament folder and its configuration, workbook, and templates.
 
+Executables are ignored by Git and distributed through the release archives. For source-mode MAESTRO on Windows, copy `dist/fll-toast.exe` or the released `fll-toast.exe` beside `fll-maestro.py`. For cross-platform tournament folders, also put each Mac TOAST binary there under the names `fll-toast-macos-intel` and `fll-toast-macos-apple-silicon`; MAESTRO copies these extra builds when present. The source workbooks (`.xlsx`/`.xlsm`) and `instructions.pdf` remain tracked.
+
 ## GitHub Actions builds
 
 The workflow builds and smoke-tests Windows and both macOS architectures before packaging them. A manual workflow run produces test artifacts; a version tag produces a draft GitHub Release. Follow the versioned-release steps below after changing either program.
@@ -106,13 +108,13 @@ The artifacts are temporary CI outputs. This path does not create a tag or a Git
 
 ### Versioned release
 
-1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same new three-part version, such as `1.00.04`.
+1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same new three-part version, such as `1.00.05`.
 2. Run the tests and commit and push the version change.
 3. Create the matching annotated tag and push it:
 
    ```powershell
-   git tag -a v1.00.04 -m v1.00.04
-   git push orgin v1.00.04
+   git tag -a v1.00.05 -m v1.00.05
+   git push orgin v1.00.05
    ```
 
 4. GitHub validates that the tag matches both embedded versions, then builds and tests all three platforms.

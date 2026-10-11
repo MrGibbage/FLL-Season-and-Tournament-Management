@@ -2,15 +2,11 @@
 
 import tempfile
 import unittest
-import json
 from pathlib import Path
 
 import pandas as pd
 
-from modules.file_operations import companion_toast_mapping, copy_files
-
-
-ROOT = Path(__file__).resolve().parents[1]
+from modules.file_operations import available_toast_mappings, companion_toast_mapping, copy_files
 
 
 class CompanionToastTests(unittest.TestCase):
@@ -45,16 +41,20 @@ class CompanionToastTests(unittest.TestCase):
             self.assertEqual((tournament_root / 'Example' / 'fll-toast-macos-apple-silicon').read_bytes(),
                              b'Apple silicon TOAST')
 
-    def test_qualifier_configs_ship_both_mac_architectures(self):
-        names = {'fll-toast-macos-intel', 'fll-toast-macos-apple-silicon'}
-        for filename in ('qualifiers-with-divisions.json', 'qualifiers-without-divisions.json'):
-            with self.subTest(config=filename):
-                config = json.loads((ROOT / filename).read_text(encoding='utf-8'))
-                copied = {entry['dest']: entry['source']
-                          for entry in config['copy_file_list_common']}
-                self.assertTrue(names.issubset(copied))
-                for name in names:
-                    self.assertTrue((ROOT / copied[name]).is_file())
+    def test_extra_platform_binaries_are_optional(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.assertEqual(available_toast_mappings(directory, 'win32'),
+                             [companion_toast_mapping('win32')])
+            (root / 'fll-toast-macos-intel').write_bytes(b'Intel')
+            mappings = available_toast_mappings(directory, 'win32')
+            self.assertEqual([entry['dest'] for entry in mappings],
+                             ['fll-toast.exe', 'fll-toast-macos-intel'])
+            (root / 'fll-toast-macos-apple-silicon').write_bytes(b'Apple')
+            mappings = available_toast_mappings(directory, 'win32')
+            self.assertEqual([entry['dest'] for entry in mappings],
+                             ['fll-toast.exe', 'fll-toast-macos-intel',
+                              'fll-toast-macos-apple-silicon'])
 
 
 if __name__ == '__main__':

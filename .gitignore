@@ -34,9 +34,11 @@ workspace/
 # Tournament folders
 tournaments/
 
-# Build artifacts and exes
-!fll-maestro.exe
-!fll-toast.exe
+# Build artifacts and executables (download or build locally)
+*.exe
+/fll-maestro
+/fll-toast
+/fll-toast-macos-*
 dist/
 dist/**
 build/

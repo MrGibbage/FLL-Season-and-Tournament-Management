@@ -1,5 +1,5 @@
 # Manual version string (edit as needed)
-MAESTRO_VERSION = "1.00.04"
+MAESTRO_VERSION = "1.00.05"
 
 # ...existing code...
 
@@ -39,6 +39,7 @@ from modules.file_operations import (
     create_folder,
     copy_files,
     companion_toast_mapping,
+    available_toast_mappings,
     generate_tournament_config,
 )
 from modules.excel_operations import read_table_as_df, verify_workbooks_closed
@@ -491,9 +492,9 @@ def main():
 
     # Get file lists for copying to tournament folders
     common_files = list(config.get("copy_file_list_common", []))
-    toast_mapping = companion_toast_mapping()
-    if not any(entry.get("dest") == toast_mapping["dest"] for entry in common_files):
-        common_files.append(toast_mapping)
+    for toast_mapping in available_toast_mappings(dir_path):
+        if not any(entry.get("dest") == toast_mapping["dest"] for entry in common_files):
+            common_files.append(toast_mapping)
     divisions_only_files = config.get("copy_file_list_divisions_only", [])
     no_divisions_only_files = config.get("copy_file_list_no_divisions_only", [])
 

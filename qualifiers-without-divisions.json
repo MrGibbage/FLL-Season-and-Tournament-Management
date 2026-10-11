@@ -11,14 +11,6 @@
     {
       "source": "instructions.pdf",
       "dest": "instructions.pdf"
-    },
-    {
-      "source": "fll-toast-macos-intel",
-      "dest": "fll-toast-macos-intel"
-    },
-    {
-      "source": "fll-toast-macos-apple-silicon",
-      "dest": "fll-toast-macos-apple-silicon"
     }
   ],
   "copy_file_list_no_divisions_only": [
