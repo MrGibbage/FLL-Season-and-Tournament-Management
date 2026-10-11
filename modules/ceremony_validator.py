@@ -43,6 +43,7 @@ class OJSValidator:
         self.robot_game_max_score = robot_game_max_score
         self.errors: List[ValidationError] = []
         self.warnings: List[ValidationError] = []
+        self.missing_awards: List[Tuple[str, str]] = []
 
     def add_error(self, sheet: str, message: str):
         """Add a validation error."""
@@ -213,7 +214,7 @@ class OJSValidator:
 
         return not self.has_errors()
 
-    def validate_award_duplicates(self, ojs_path: str, division: str = "") -> bool:
+    def validate_award_duplicates(self, ojs_path: str, division: str = "", judges_labels=None) -> bool:
         """Validate that awards are not assigned to more than one team.
 
         Args:
@@ -243,10 +244,16 @@ class OJSValidator:
         if not duplicates.empty:
             for award_value in sorted(set(duplicates)):
                 dup_count = (awards == award_value).sum()
-                self.add_error(
-                    SHEET_RESULTS,
-                    f"Award '{award_value}' is assigned to multiple teams (count={dup_count})",
-                )
+                if award_value in (judges_labels or ()):
+                    logger.info(
+                        "Judges label %r is used %s times in %s; tournament allocation count decides validity",
+                        award_value, dup_count, ojs_path,
+                    )
+                else:
+                    self.add_error(
+                        SHEET_RESULTS,
+                        f"Award '{award_value}' is assigned to multiple teams (count={dup_count})",
+                    )
 
         return not self.has_errors()
 
@@ -255,6 +262,7 @@ class OJSValidator:
         import os
         import math
         self.context = ''
+        self.missing_awards = []
         info = config['INFO']
         results = []
         all_ids = set()
@@ -324,6 +332,12 @@ class OJSValidator:
                 results.append((code, rr))
             except Exception as exc:
                 self.add_error(context, str(exc))
+        self.validate_award_selections(config, results)
+
+    def validate_award_selections(self, config, results):
+        """Check award places separately from workbook score and identity checks."""
+        info = config['INFO']
+        self.missing_awards = []
         known = {code: set() for code, _ in results}
         for award in config['AWARDS']:
             if award['ID'] == 'P_AWD_RG':
@@ -337,6 +351,27 @@ class OJSValidator:
                         self.add_error(code or 'Tournament', 'Robot Game awards have missing places or tied ranks; resolve before generating the ceremony')
                 continue
             labels = award.get('Labels', [])
+            if award['ID'] == 'J_AWD_Judges':
+                count = int(award.get('TournCount', 0))
+                if count < 0 or len(labels) < count:
+                    self.add_error('Tournament', 'Judges: invalid allocation or too few labels')
+                    continue
+                selected = [value for _, frame in results for value in frame['Award'].dropna()
+                            if value in labels]
+                for code in known:
+                    known[code].update(labels)
+                if len(selected) < count:
+                    self.missing_awards.append(
+                        ('Tournament', f'Judges Awards ({len(selected)} of {count} selected)')
+                    )
+                elif len(selected) > count:
+                    self.add_error('Tournament',
+                                   f'Judges Awards: {len(selected)} selected, {count} allocated')
+                repeated = {label for label in selected if selected.count(label) > 1}
+                for label in sorted(repeated):
+                    logger.info("Judges label %r selected %s times across the tournament",
+                                label, selected.count(label))
+                continue
             groups = [(code, [rr], int(award.get(code+'_count', 0))) for code,rr in results] if info['using_divisions'] and award['DivAwd'] else [('Tournament', [rr for _,rr in results], int(award.get('TournCount',0)))]
             for code, frames, count in groups:
                 if count < 0 or len(labels) < count:
@@ -347,13 +382,16 @@ class OJSValidator:
                     for division, frame in results:
                         if any(frame is df for df in frames):
                             known[division].add(label)
-                    if selected.count(label) != 1:
-                        self.add_error(code, f'{label}: expected one winner, found {selected.count(label)}')
+                    selected_count = selected.count(label)
+                    if selected_count == 0:
+                        self.missing_awards.append((code, label))
+                    elif selected_count != 1:
+                        self.add_error(code, f'{label}: expected one winner, found {selected_count}')
         for code, rr in results:
             for label in set(rr['Award'].dropna()) - known[code]:
                 self.add_error(code or 'Tournament', f'Unknown or unallocated award: {label}')
 
-    def validate_all_sheets(self, ojs_path: str, division: str = "") -> bool:
+    def validate_all_sheets(self, ojs_path: str, division: str = "", judges_labels=None) -> bool:
         """Run all validations on an OJS workbook.
 
         Args:
@@ -407,6 +445,6 @@ class OJSValidator:
         self.validate_core_values_scores(ojs_path, division)
 
         # Awards uniqueness (Tournament and Program Info)
-        self.validate_award_duplicates(ojs_path, division)
+        self.validate_award_duplicates(ojs_path, division, judges_labels)
 
         return not self.has_errors()

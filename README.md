@@ -47,6 +47,7 @@ Includes two tools for tournament management:
 - **Other outputs**: Generates simplified HTML summaries
 - **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
 - **Presentation order**: Award winners render in reverse ranking order (3rd, 2nd, 1st) for ceremony flow (TOAST 1.00.01+)
+- **Intentional unawarded places**: If an allocated regular or Judges award has no selected team, TOAST lists the missing places and requires the director to type `YES`. Those places render as `NONE` in the ceremony and summary. ENTER exits without generating files. Judges selections are counted tournament-wide; their numbers are interchangeable, and repeated Judges labels are logged. Selections above the allocation, missing robot-game places, and other validation errors still stop generation.
 
 
 

@@ -56,25 +56,23 @@
 
 <p><span class="highlight0">{{ ceremony.sponsor_acknowledgement|e }}</span></p>
 
+<h2>Volunteers</h2>
 <p><span class="highlight1">Before we get to the team awards, we want to take a moment to recognize our volunteers. Volunteers - please stand and wave to the crowd! Teams - please give a round of applause for our volunteers. No words can adequately express our appreciation for you.</span></p>
 
-<p><span class="highlight0">No tournament can happen without the support, time, and commitment of our volunteers. At every tournament, there are those individuals who are the “go-to” people, the “make it happen” people. Our first award goes to just such a person - a person who really went above and beyond to make this tournament a success.</span></p>
+<p><span class="highlight0">No tournament can happen without the support, time, and commitment of our volunteers. At every tournament, there are those individuals that keep things running like a well-programmed robot! Our first award goes to just such a person - a person who really went above and beyond to make this tournament a success.</span></p>
+
+<p><span class="highlight1"><i>Tournament Director awards the Volunteer Award and shares why this person received it.</i></span></p>
 
 <h2>Coach Recognition</h2>
-<p><span class="highlight1">Coaches and mentors, please stand. These are the special volunteers who have spent hours each week with the teams. They have inspired, encouraged, and motivated, all the while demonstrating and modeling <i>Gracious Professionalism</i><sup>&#174;</sup>. Teams, take a moment to tell your coaches how much you appreciate all they have done for you.</span></p>
-
-<h2>Volunteers</h2>
-<p><span class="highlight0">There are special volunteers who have spent hours each week with the teams. </i>Tournament director talks and presents the volunteer award.</span></p>
-
-<p><span class="highlight1">Coaches and mentors - please stand. You all have inspired, encouraged, and motivated your team, all the while demonstrating and modeling Gracious Professionalism®. Teams, take a moment to tell your coaches how much you appreciate all they have done for you.</span></p>
+<p><span class="highlight0">Coaches and mentors, please stand. These are the special volunteers who have spent hours each week with the teams. They have inspired, encouraged, and motivated, all the while demonstrating and modeling <i>Gracious Professionalism</i><sup>&#174;</sup>. Teams, take a moment to tell your coaches how much you appreciate all they have done for you.</span></p>
 
 {% if ceremony.coach_nomination_announcement %}
-<p><span class="highlight0">{{ ceremony.coach_nomination_announcement|e }}</span></p>
+<p><span class="highlight1">{{ ceremony.coach_nomination_announcement|e }}</span></p>
 {% endif %}
 
-<p><span class="highlight1">So let's play a quick game. Coaches, mentors, and Event Volunteers - Stand (or if you are standing, raise your hand). We have volunteers - coaches and event volunteers who keep coming back year and after year, giving their time, expertise and support.</span></p>
+<p><span class="highlight0">So let's play a quick game. Coaches, mentors, and Event Volunteers - Stand (or if you are standing, raise your hand). We have volunteers - coaches and event volunteers who keep coming back year and after year, giving their time, expertise and support.</span></p>
 
-<p><span class="highlight0">Please sit or put your hand down if this was your first season!  We hope to see you back next season.  Now, sit or hands down if this is your second season, third season, fourth, fifth, sixth…. [Continue until only one person remains].  Wow!  Let's hear it for such an amazing accomplishment.  Thank you and all the coaches and volunteers for making the magic happen!</span></p>
+<p><span class="highlight1">Please sit or put your hand down if this was your first season! We hope to see you back next season. Now, sit or hands down if this is your second season, third season, fourth, fifth, sixth?. [Continue until only one person remains]. Wow! Let's hear it for such an amazing accomplishment. Thank you and all the coaches and volunteers for making the magic happen!</span></p>
 
 <h2>Robot Performance Awards</h2>
 
@@ -112,11 +110,13 @@
 
 {{ J_AWD_CV_D2|safe }}
 
-{% if ja_count > 0 %}
+{% if ja_count > 0 or judges_missing_count > 0 %}
 <h2>Judge's Award</h2>
-<p><span class="highlight1">In addition to our Core Awards, we also have {{ ja_count }} judge's award(s) to give out.  A Judge's Award is given to a team who made a big impact on our Judges for one spectacular reason or another.</span></p>
+<p><span class="highlight1">In addition to our Core Awards, we also have the Judges Award. A Judges Award is given to a team who made a big impact on our judges for one spectacular reason or another.</span></p>
 
+{% if ja_count > 0 %}
 <p><span class="highlight1">{{ ja_go_goes }}</span></p>
+{% endif %}
 {{ J_AWD_Judges|safe }}</p>
 {% endif %}
 

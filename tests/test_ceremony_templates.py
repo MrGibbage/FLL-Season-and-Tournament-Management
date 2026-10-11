@@ -10,7 +10,7 @@ class CeremonyTemplateTests(unittest.TestCase):
         name = f'script_template-{suffix}.html.jinja'
         data = dict.fromkeys(renderer.extract_template_variables(name), '')
         data.update(ceremony_context(info))
-        data.update(ja_count=0, ADV=advancing, ADV_D1=advancing, ADV_D2='',
+        data.update(ja_count=0, judges_missing_count=0, ADV=advancing, ADV_D1=advancing, ADV_D2='',
                     tournament_name='Test Tournament')
         data.pop('bg_color_0', None)
         data.pop('bg_color_1', None)
@@ -37,6 +37,40 @@ class CeremonyTemplateTests(unittest.TestCase):
                                  'Nominate here', 'Finals on March 5 at Example Hall',
                                  'by email', 'example.org', '<p>Team 123</p>']:
                     self.assertIn(expected, html)
+
+    def test_volunteer_and_coach_script(self):
+        for suffix in ['with-divisions', 'without-divisions']:
+            with self.subTest(suffix=suffix):
+                html = self.render(suffix, {'ceremony': {
+                    'program_season_name': 'Bioglow',
+                    'sponsor_acknowledgement': 'Virginia and DC sponsor: JMU & friends',
+                    'coach_nomination_announcement': 'Apply at va-dcfll.org',
+                }})
+                self.assertEqual(html.count('<h2>Volunteers</h2>'), 1)
+                self.assertEqual(html.count('<h2>Coach Recognition</h2>'), 1)
+                self.assertLess(html.index('<h2>Volunteers</h2>'),
+                                html.index('<h2>Coach Recognition</h2>'))
+                self.assertIn('Virginia and DC sponsor: JMU &amp; friends', html)
+                self.assertIn('keep things running like a well-programmed robot', html)
+                self.assertIn('Tournament Director awards the Volunteer Award', html)
+                self.assertIn('Apply at va-dcfll.org', html)
+                self.assertNotIn('go-to', html)
+                self.assertNotIn('Gracious Professionalism?', html)
+
+    def test_unawarded_judges_place_is_visible(self):
+        for suffix in ['with-divisions', 'without-divisions']:
+            with self.subTest(suffix=suffix):
+                renderer = CeremonyRenderer(str(ROOT))
+                name = f'script_template-{suffix}.html.jinja'
+                data = dict.fromkeys(renderer.extract_template_variables(name), '')
+                data.update(ceremony_context({'ceremony': {}}))
+                data.update(ja_count=0, judges_missing_count=1,
+                            J_AWD_Judges='<p>Judges Award: NONE</p>',
+                            ADV='', ADV_D1='', ADV_D2='', tournament_name='Test')
+                data.pop('bg_color_0', None)
+                data.pop('bg_color_1', None)
+                html = renderer.render_text(name, data)
+                self.assertIn('Judges Award: NONE', html)
 
     def test_summary_optional_sections(self):
         renderer = CeremonyRenderer(str(ROOT))

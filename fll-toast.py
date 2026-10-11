@@ -94,6 +94,26 @@ def print_error_msg(text: str):
     print(f"{Fore.RED}✗ {text}{Style.RESET_ALL}")
 
 
+def confirm_missing_awards(missing_awards):
+    """Require an exact, deliberate YES before leaving allocated awards unpresented."""
+    print(f"\n{Fore.YELLOW}{'!' * 70}{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}!!!  WARN: AWARDS WITHOUT WINNERS  !!!{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}{'!' * 70}{Style.RESET_ALL}")
+    print("You have not selected teams for all allocated awards:")
+    for division, label in missing_awards:
+        division_name = f"Division {division[1:]}" if division.startswith("D") else division
+        location = f" in {division_name}" if division != "Tournament" else ""
+        print(f"  - {label}{location}")
+    print("This can be overridden if leaving these awards unpresented is intentional.")
+    try:
+        response = input(
+            'Type "YES" to continue, or press ENTER to exit TOAST and check your OJS assignments: '
+        ).strip()
+    except EOFError:
+        response = ""
+    return response == "YES"
+
+
 def load_config(config_path: str) -> dict:
     """Load tournament configuration file."""
     logger.info(f"Loading configuration from: {config_path}")
@@ -368,6 +388,10 @@ def main(workbooks=None):
     if isinstance(maximum, bool) or not isinstance(maximum, int) or maximum <= 0:
         raise ValueError("INFO.robot_game_max_score must be a positive integer")
     validator = OJSValidator(workbooks, maximum)
+    judges_labels = next(
+        (set(award.get('Labels', [])) for award in config['AWARDS']
+         if award['ID'] == 'J_AWD_Judges'), set()
+    )
     for idx, entry in enumerate(ojs_files):
         ojs_file = entry["filename"]
         division_label = entry.get("division") or f"Division {idx + 1}" if using_divisions else ""
@@ -375,7 +399,7 @@ def main(workbooks=None):
         print(
             f"\n{Fore.CYAN}Validating {ojs_file} ({division_label or 'No Division'})...{Style.RESET_ALL}"
         )
-        validator.validate_all_sheets(ojs_path, division_label)
+        validator.validate_all_sheets(ojs_path, division_label, judges_labels=judges_labels)
 
     if not validator.has_errors():
         validator.validate_tournament(config, base_dir)
@@ -395,6 +419,11 @@ def main(workbooks=None):
         input("\nPress ENTER to exit...")
         sys.exit(1)
 
+    if validator.missing_awards:
+        if not confirm_missing_awards(validator.missing_awards):
+            print("No ceremony files generated. Check the award assignments in the OJS.")
+            sys.exit(1)
+
     if validator.warnings:
         print(f"\n{Fore.YELLOW}Warnings found:{Style.RESET_ALL}")
         for warning in validator.warnings:
@@ -408,7 +437,10 @@ def main(workbooks=None):
             print("Operation cancelled by user")
             sys.exit(0)
 
-    print_success("All validations passed!")
+    if validator.missing_awards:
+        print_warning("Award omissions approved; missing places will appear as NONE.")
+    else:
+        print_success("All validations passed!")
 
     print_header("COLLECTING AWARD DATA")
     collector = CeremonyDataCollector(config, dual_emcee=dual_emcee, workbooks=workbooks)
@@ -520,7 +552,9 @@ def main(workbooks=None):
                     tag_field = f"ScriptTag{entry['code']}" if entry["code"] else ""
                     tag = award.get(tag_field, "") if tag_field else ""
                     if tag:
-                        template_data[tag] = collector.format_winners_as_html(winners, division=entry["label"])
+                        template_data[tag] = collector.format_allocated_awards_as_html(
+                            winners, division_labels, division=entry["label"]
+                        )
 
                     if award_id == "J_AWD_IP" and "ip_this_these" not in template_data:
                         template_data["ip_this_these"] = (
@@ -537,9 +571,12 @@ def main(workbooks=None):
                 if tourn_count > 0:
                     all_winners = []
                     for entry in division_entries:
-                        winners = collector.collect_judged_awards(
-                            entry["path"], award, labels[:tourn_count], "", entry["filename"]
-                        )
+                        if award_id == "J_AWD_Judges":
+                            winners = collector.collect_tournament_judges(entry["path"], labels)
+                        else:
+                            winners = collector.collect_judged_awards(
+                                entry["path"], award, labels[:tourn_count], "", entry["filename"]
+                            )
                         all_winners.extend(winners)
 
                     if len(all_winners) < tourn_count:
@@ -555,7 +592,18 @@ def main(workbooks=None):
 
                     tag = award.get("ScriptTagNoDiv", "")
                     if tag:
-                        template_data[tag] = collector.format_winners_as_html(all_winners)
+                        if award_id == "J_AWD_Judges":
+                            rendered = collector.format_winners_as_html(all_winners)
+                            missing = max(tourn_count - len(all_winners), 0)
+                            none_lines = [collector.highlight_tracker.wrap_paragraph(
+                                "Judges Award: NONE"
+                            ) for _ in range(missing)]
+                            template_data[tag] = "\n".join(filter(None, [rendered, *none_lines]))
+                            template_data["judges_missing_count"] = missing
+                        else:
+                            template_data[tag] = collector.format_allocated_awards_as_html(
+                                all_winners, labels[:tourn_count]
+                            )
 
                     if award_id == "J_AWD_Judges":
                         template_data["ja_count"] = len(all_winners)
@@ -592,6 +640,7 @@ def main(workbooks=None):
     # Set ja_count to 0 if not already set (must be int for template comparison)
     if "ja_count" not in template_data:
         template_data["ja_count"] = 0
+    template_data.setdefault("judges_missing_count", 0)
 
     print_success(f"Collected data for {len(template_data)} template variables")
 

@@ -115,6 +115,13 @@ class CeremonyDataCollector:
                 winners.append(AwardWinner(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]), label))
         return winners
 
+    def collect_tournament_judges(self, ojs_path, labels):
+        """Collect every Judges selection, regardless of its number or division."""
+        df = self.workbooks.table(ojs_path, SHEET_RESULTS, TABLE_TOURNAMENT_DATA)
+        selected = df[df['Award'].isin(labels)]
+        return [AwardWinner(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]),
+                            "Judges Award") for _, row in selected.iterrows()]
+
     def format_team_list_as_html(self, teams: List[Tuple[int, str]]) -> str:
         """Format team list as HTML paragraphs with highlighting.
         
@@ -172,3 +179,20 @@ class CeremonyDataCollector:
             html_lines.append(html_line)
 
         return "\n".join(html_lines)
+
+    def format_allocated_awards_as_html(
+        self, winners: List[AwardWinner], labels: List[str], division: str = ""
+    ) -> str:
+        """Show each allocated place, including an explicitly waived place as NONE."""
+        by_label = {winner.label: winner for winner in winners}
+        lines = []
+        for label in reversed(labels):
+            winner = by_label.get(label)
+            if winner is not None:
+                lines.append(self.format_winners_as_html([winner], division=division))
+            else:
+                prefix = f"{escape(division)} " if division else ""
+                lines.append(self.highlight_tracker.wrap_paragraph(
+                    f"{prefix}{escape(label)}: NONE"
+                ))
+        return "\n".join(lines)

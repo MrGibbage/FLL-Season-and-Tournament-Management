@@ -987,6 +987,31 @@ def protect_worksheets(tournament: pd.Series, book: Workbook) -> None:
     """
     logger.info(f"Protecting worksheets for {tournament[COL_OJS_FILENAME]}")
     for ws in book.worksheets:
+        # Excel applies column styles to blank cells that openpyxl has not
+        # materialized. Several template columns are unlocked, including A
+        # and Z on Results and Rankings, so lock their inherited style too.
+        for dimension in list(ws.column_dimensions.values()) + list(ws.row_dimensions.values()):
+            if not dimension.protection.locked:
+                protection = _copy(dimension.protection)
+                protection.locked = True
+                dimension.protection = protection
+        # Template styles can leave unlocked cells below or beside a resized
+        # table. Only data rows in actual tables may retain that setting.
+        editable_ranges = []
+        for table in ws.tables.values():
+            bounds = CellRange(table.ref)
+            if bounds.max_row > bounds.min_row:
+                editable_ranges.append(bounds)
+        for cell in ws._cells.values():
+            if cell.protection.locked:
+                continue
+            if any(area.min_col <= cell.column <= area.max_col
+                   and area.min_row < cell.row <= area.max_row
+                   for area in editable_ranges):
+                continue
+            protection = _copy(cell.protection)
+            protection.locked = True
+            cell.protection = protection
         ws.protection.selectLockedCells = True
         ws.protection.selectUnlockedCells = False
         ws.protection.formatCells = False
