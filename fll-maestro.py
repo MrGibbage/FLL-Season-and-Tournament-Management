@@ -1,5 +1,5 @@
 # Manual version string (edit as needed)
-MAESTRO_VERSION = "1.00.05"
+MAESTRO_VERSION = "1.00.06"
 
 # ...existing code...
 

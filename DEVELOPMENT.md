@@ -108,13 +108,13 @@ The artifacts are temporary CI outputs. This path does not create a tag or a Git
 
 ### Versioned release
 
-1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same new three-part version, such as `1.00.05`.
+1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same new three-part version, such as `1.00.06`.
 2. Run the tests and commit and push the version change.
 3. Create the matching annotated tag and push it:
 
    ```powershell
-   git tag -a v1.00.05 -m v1.00.05
-   git push orgin v1.00.05
+   git tag -a v1.00.06 -m v1.00.06
+   git push orgin v1.00.06
    ```
 
 4. GitHub validates that the tag matches both embedded versions, then builds and tests all three platforms.

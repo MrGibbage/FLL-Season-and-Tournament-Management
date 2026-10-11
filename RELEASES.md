@@ -45,7 +45,10 @@
 - Remove division suffixes from combined ceremony filenames; keep single-division suffixes.
 - Refresh 2026 Bioglow qualifier workbooks and templates.
 
-## 1.00.05 (next build)
+## 1.00.06 (next build)
+- Keep the Dual Emcee input (Team and Program Information!F2) unlocked in generated OJS workbooks while protecting cells outside the tables.
+
+## 1.00.05
 - Executables are distributed through releases and ignored by Git; the small source workbooks stay tracked.
 - MAESTRO copies any extra Mac TOAST builds present beside it without requiring them in a source checkout.
 

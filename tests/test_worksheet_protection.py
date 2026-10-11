@@ -26,6 +26,7 @@ class WorksheetProtectionTests(unittest.TestCase):
                     sheet['E4'].protection = Protection(locked=False)
                     protect_worksheets(pd.Series({'OJS_FileName': template.name}), book)
                     self.assertFalse(sheet['D4'].protection.locked)
+                    self.assertFalse(sheet['F2'].protection.locked)
                     self.assertTrue(sheet['A7'].protection.locked)
                     self.assertTrue(sheet['E4'].protection.locked)
                     self.assertTrue(sheet.protection.sheet)
@@ -42,6 +43,7 @@ class WorksheetProtectionTests(unittest.TestCase):
                             self.assertTrue(saved_results.column_dimensions['A'].protection.locked)
                             self.assertTrue(saved_results.column_dimensions['Z'].protection.locked)
                             self.assertFalse(saved_results['P3'].protection.locked)
+                            self.assertFalse(saved['Team and Program Information']['F2'].protection.locked)
                         finally:
                             saved.close()
                     for ws in book.worksheets:
@@ -53,6 +55,8 @@ class WorksheetProtectionTests(unittest.TestCase):
                                  for t in ws.tables.values()]
                         for cell in ws._cells.values():
                             if not cell.protection.locked:
+                                if ws.title == 'Team and Program Information' and cell.coordinate == 'F2':
+                                    continue
                                 self.assertTrue(any(a.min_col <= cell.column <= a.max_col
                                                     and a.min_row < cell.row <= a.max_row
                                                     for a in areas), f'{ws.title}!{cell.coordinate}')

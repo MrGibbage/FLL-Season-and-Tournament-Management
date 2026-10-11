@@ -996,7 +996,7 @@ def protect_worksheets(tournament: pd.Series, book: Workbook) -> None:
                 protection.locked = True
                 dimension.protection = protection
         # Template styles can leave unlocked cells below or beside a resized
-        # table. Only data rows in actual tables may retain that setting.
+        # table. Data rows and the Dual Emcee control are the editable areas.
         editable_ranges = []
         for table in ws.tables.values():
             bounds = CellRange(table.ref)
@@ -1005,6 +1005,8 @@ def protect_worksheets(tournament: pd.Series, book: Workbook) -> None:
         for cell in ws._cells.values():
             if cell.protection.locked:
                 continue
+            if ws.title == SHEET_TEAM_INFO and cell.coordinate == "F2":
+                continue
             if any(area.min_col <= cell.column <= area.max_col
                    and area.min_row < cell.row <= area.max_row
                    for area in editable_ranges):
@@ -1012,6 +1014,11 @@ def protect_worksheets(tournament: pd.Series, book: Workbook) -> None:
             protection = _copy(cell.protection)
             protection.locked = True
             cell.protection = protection
+        if ws.title == SHEET_TEAM_INFO:
+            dual_emcee = ws["F2"]
+            protection = _copy(dual_emcee.protection)
+            protection.locked = False
+            dual_emcee.protection = protection
         ws.protection.selectLockedCells = True
         ws.protection.selectUnlockedCells = False
         ws.protection.formatCells = False
