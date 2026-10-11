@@ -45,7 +45,10 @@
 - Remove division suffixes from combined ceremony filenames; keep single-division suffixes.
 - Refresh 2026 Bioglow qualifier workbooks and templates.
 
-## 1.00.03 (next build)
+## 1.00.04 (next build)
+- MAESTRO now copies the matching TOAST executable into every generated tournament folder.
+
+## 1.00.03
 - TOAST can continue after an explicit `YES` when regular or tournament-level Judges awards are intentionally left unawarded; unfilled places render as `NONE`. Judges labels are interchangeable, including repeated labels across or within OJS workbooks. Selections above the tournament allocation remain errors.
 - Updated both closing-ceremony templates with volunteer and coach recognition text.
 - MAESTRO locks cells and inherited row/column styles outside OJS table data rows in newly generated workbooks.

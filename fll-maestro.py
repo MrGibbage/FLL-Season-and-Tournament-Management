@@ -1,5 +1,5 @@
 # Manual version string (edit as needed)
-MAESTRO_VERSION = "1.00.03"
+MAESTRO_VERSION = "1.00.04"
 
 # ...existing code...
 
@@ -38,6 +38,7 @@ from modules.file_operations import (
     load_json_without_notes,
     create_folder,
     copy_files,
+    companion_toast_mapping,
     generate_tournament_config,
 )
 from modules.excel_operations import read_table_as_df, verify_workbooks_closed
@@ -306,11 +307,20 @@ def validate_environment(
     # Check extra files - combine all file lists and extract source filenames
     all_files = common_files + divisions_only_files + no_divisions_only_files
     missing_files = []
+    missing_toast = []
+    toast_destination = companion_toast_mapping()["dest"]
     for file_mapping in all_files:
         source_file = file_mapping.get("source", "")
         if source_file and not os.path.exists(os.path.join(dir_path, source_file)):
-            missing_files.append(source_file)
+            if file_mapping.get("dest") == toast_destination:
+                missing_toast.append(source_file)
+            else:
+                missing_files.append(source_file)
 
+    if missing_toast:
+        summary.add_error(
+            f"Companion TOAST executable not found beside MAESTRO: {', '.join(missing_toast)}"
+        )
     if missing_files:
         summary.add_warning(f"Missing optional files: {', '.join(missing_files)}")
     else:
@@ -480,7 +490,10 @@ def main():
     template_file = os.path.join(dir_path, config["tournament_template"])
 
     # Get file lists for copying to tournament folders
-    common_files = config.get("copy_file_list_common", [])
+    common_files = list(config.get("copy_file_list_common", []))
+    toast_mapping = companion_toast_mapping()
+    if not any(entry.get("dest") == toast_mapping["dest"] for entry in common_files):
+        common_files.append(toast_mapping)
     divisions_only_files = config.get("copy_file_list_divisions_only", [])
     no_divisions_only_files = config.get("copy_file_list_no_divisions_only", [])
 

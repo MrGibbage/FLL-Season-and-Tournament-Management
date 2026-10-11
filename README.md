@@ -66,6 +66,8 @@ To choose a Mac download, open **Apple menu () > About This Mac** and look fo
 
 Download and extract the archive for the computer that will run the software. Regional leadership uses both MAESTRO and TOAST. A tournament director normally needs only TOAST, placed in the tournament folder beside `tournament_config.json`, the OJS workbook, and the Jinja templates. TOAST can then be run without command-line arguments.
 
+Keep MAESTRO and the matching TOAST executable in the same folder as the season JSON, source workbook, and OJS template. MAESTRO automatically copies that platform's TOAST executable into each new tournament folder. On Windows, the companion file is `fll-toast.exe`; on macOS, it is `fll-toast`. If it is missing, add it beside MAESTRO before generating tournaments.
+
 ### First run after downloading
 
 Only download the archives from this repository's Releases page. Both programs are command-line tools: open a terminal in the folder containing the executable so you can read prompts and errors.

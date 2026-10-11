@@ -1,6 +1,7 @@
 """File and folder operations for tournament setup."""
 
 import os
+import sys
 import json
 import shutil
 import logging
@@ -29,6 +30,12 @@ from .logger import print_error
 
 
 logger = logging.getLogger("ojs_builder")
+
+
+def companion_toast_mapping(platform: str | None = None) -> dict[str, str]:
+    """Name the TOAST binary distributed beside MAESTRO on this platform."""
+    executable = "fll-toast.exe" if (platform or sys.platform).startswith("win") else "fll-toast"
+    return {"source": executable, "dest": executable}
 
 
 def _remove_note_keys(obj: Any) -> Any:
