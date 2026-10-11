@@ -22,7 +22,7 @@ from colorama import init, Fore, Style
 
 
 # Application version. Edit manually as needed.
-TOAST_VERSION = "1.00.06"
+TOAST_VERSION = "1.00.07"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -421,7 +421,10 @@ def main(workbooks=None):
 
     if validator.missing_awards:
         if not confirm_missing_awards(validator.missing_awards):
-            print("No ceremony files generated. Check the award assignments in the OJS.")
+            print("No closing ceremony script or summary was generated.")
+            print('Check the missing award assignments in the OJS and run TOAST again,')
+            print('or rerun TOAST and type "YES" if the omissions are intentional.')
+            input("Press ENTER to exit...")
             sys.exit(1)
 
     if validator.warnings:

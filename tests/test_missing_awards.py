@@ -188,13 +188,17 @@ class MissingAwardTests(unittest.TestCase):
             argv = ["toast", "--tournament-dir", folder, "--output-dir", str(output)]
             try:
                 for response in ("", "yes"):
-                    with patch("sys.argv", argv), patch("builtins.input", side_effect=["", response]), \
+                    terminal = io.StringIO()
+                    with patch("sys.argv", argv), patch("builtins.input", side_effect=["", response, ""]) as prompts, \
                             patch.object(OJSValidator, "validate_all_sheets", return_value=True), \
                             patch.object(OJSValidator, "validate_tournament", validate_tournament), \
-                            contextlib.redirect_stdout(io.StringIO()):
+                            contextlib.redirect_stdout(terminal):
                         with self.assertRaises(SystemExit) as stopped:
                             module["main"](Workbooks())
                     self.assertEqual(stopped.exception.code, 1)
+                    self.assertIn("No closing ceremony script or summary was generated.", terminal.getvalue())
+                    self.assertIn('type "YES"', terminal.getvalue())
+                    self.assertEqual(prompts.call_args_list[-1].args[0], "Press ENTER to exit...")
                     self.assertFalse(list(output.glob("*.html")))
                 with patch("sys.argv", argv), patch("builtins.input", side_effect=["", "YES", ""]), \
                         patch.object(OJSValidator, "validate_all_sheets", return_value=True), \

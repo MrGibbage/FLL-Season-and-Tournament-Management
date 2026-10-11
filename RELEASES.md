@@ -45,7 +45,11 @@
 - Remove division suffixes from combined ceremony filenames; keep single-division suffixes.
 - Refresh 2026 Bioglow qualifier workbooks and templates.
 
-## 1.00.06 (next build)
+## 1.00.07 (next build)
+- Keep the password input (Team and Program Information!I1) unlocked in generated OJS workbooks; I2 remains locked.
+- TOAST waits for Enter after a declined missing-award override and explains how to continue.
+
+## 1.00.06
 - Keep the Dual Emcee input (Team and Program Information!F2) unlocked in generated OJS workbooks while protecting cells outside the tables.
 
 ## 1.00.05

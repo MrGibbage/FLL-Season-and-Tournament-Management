@@ -27,6 +27,10 @@ class WorksheetProtectionTests(unittest.TestCase):
                     protect_worksheets(pd.Series({'OJS_FileName': template.name}), book)
                     self.assertFalse(sheet['D4'].protection.locked)
                     self.assertFalse(sheet['F2'].protection.locked)
+                    self.assertFalse(sheet['I1'].protection.locked)
+                    self.assertTrue(sheet['I2'].protection.locked)
+                    self.assertIsNone(sheet['I2'].value)
+                    self.assertIsNone(sheet['I2'].fill.patternType)
                     self.assertTrue(sheet['A7'].protection.locked)
                     self.assertTrue(sheet['E4'].protection.locked)
                     self.assertTrue(sheet.protection.sheet)
@@ -44,6 +48,10 @@ class WorksheetProtectionTests(unittest.TestCase):
                             self.assertTrue(saved_results.column_dimensions['Z'].protection.locked)
                             self.assertFalse(saved_results['P3'].protection.locked)
                             self.assertFalse(saved['Team and Program Information']['F2'].protection.locked)
+                            self.assertFalse(saved['Team and Program Information']['I1'].protection.locked)
+                            self.assertTrue(saved['Team and Program Information']['I2'].protection.locked)
+                            self.assertIsNone(saved['Team and Program Information']['I2'].value)
+                            self.assertIsNone(saved['Team and Program Information']['I2'].fill.patternType)
                         finally:
                             saved.close()
                     for ws in book.worksheets:
@@ -55,7 +63,7 @@ class WorksheetProtectionTests(unittest.TestCase):
                                  for t in ws.tables.values()]
                         for cell in ws._cells.values():
                             if not cell.protection.locked:
-                                if ws.title == 'Team and Program Information' and cell.coordinate == 'F2':
+                                if ws.title == 'Team and Program Information' and cell.coordinate in {'F2', 'I1'}:
                                     continue
                                 self.assertTrue(any(a.min_col <= cell.column <= a.max_col
                                                     and a.min_row < cell.row <= a.max_row
