@@ -52,7 +52,7 @@ The always-available tests cover score boundaries, rubric and GP validation, gen
 
 The current season maximum robot-game score is configured as `robot_game_max_score` in the season JSON. Generated tournament configurations store it as `INFO.robot_game_max_score`; TOAST defaults to 530 when an older configuration omits it.
 
-TOAST requires integer robot scores from zero through that maximum, integer rubric scores from 0 through 4, and GP values of 0, 2, 3, or 4. It checks team identities across sheets, saved calculated scores and ranks, award labels and quotas, and advancement selections. Missing or duplicate award winners and stale or missing calculations block output. Missing an alternate is a warning; multiple alternates are an error. Champion's-rank ties are valid, while robot-game ties affecting award places require resolution.
+TOAST requires integer robot scores from zero through that maximum, integer rubric scores from 0 through 4, and GP values of 0, 2, 3, or 4. It checks team identities across sheets, saved calculated scores and ranks, award labels and quotas, and advancement selections. Unawarded regular and Judges awards require an explicit `YES` override; selections above the configured allocation, duplicate regular award winners, and stale or missing calculations block output. Repeated Judges labels are valid when the tournament-wide count fits the allocation. Missing an alternate is a warning; multiple alternates are an error. Champion's-rank ties are valid, while robot-game ties affecting award places require resolution.
 
 Both `team_list_D1/D2` and the legacy `div1_list/div2_list` template names work. TOAST validates both output templates before writing either HTML file. A failed run leaves prior HTML files untouched.
 
@@ -85,7 +85,7 @@ The executables contain Python and all Python dependencies. They do not contain 
 
 ## GitHub Actions builds
 
-Current status: the specifications and workflow are committed, and both Windows executables have been built and smoke-tested locally. The first hosted run successfully built, tested, and smoke-tested all three platforms; its two Mac jobs then exposed an archive-path error during artifact upload. That path has been corrected. A second manual run is required to verify all three downloadable artifacts. No GitHub Release has been created yet.
+The workflow builds and smoke-tests Windows and both macOS architectures before packaging them. A manual workflow run produces test artifacts; a version tag produces a draft GitHub Release. Follow the versioned-release steps below after changing either program.
 
 The **Build release binaries** workflow in `.github/workflows/build-release.yml` uses clean hosted runners to:
 
@@ -106,13 +106,13 @@ The artifacts are temporary CI outputs. This path does not create a tag or a Git
 
 ### Versioned release
 
-1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same three-part version, such as `1.00.02`.
+1. Update `MAESTRO_VERSION` in `fll-maestro.py` and `TOAST_VERSION` in `fll-toast.py` to the same new three-part version, such as `1.00.03`.
 2. Run the tests and commit and push the version change.
 3. Create the matching annotated tag and push it:
 
    ```powershell
-   git tag -a v1.00.02 -m v1.00.02
-   git push origin v1.00.02
+   git tag -a v1.00.03 -m v1.00.03
+   git push orgin v1.00.03
    ```
 
 4. GitHub validates that the tag matches both embedded versions, then builds and tests all three platforms.

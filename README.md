@@ -66,6 +66,14 @@ To choose a Mac download, open **Apple menu () > About This Mac** and look fo
 
 Download and extract the archive for the computer that will run the software. Regional leadership uses both MAESTRO and TOAST. A tournament director normally needs only TOAST, placed in the tournament folder beside `tournament_config.json`, the OJS workbook, and the Jinja templates. TOAST can then be run without command-line arguments.
 
+### First run after downloading
+
+Only download the archives from this repository's Releases page. Both programs are command-line tools: open a terminal in the folder containing the executable so you can read prompts and errors.
+
+**Windows:** Extract `fll-tools-windows-x64.zip`. If Windows blocks `fll-maestro.exe` or `fll-toast.exe`, right-click that executable in File Explorer, select **Properties**, then on the **General** tab select **Unblock** (if shown), **Apply**, and **OK**. Do this for each executable you will run. In PowerShell, run `./fll-maestro.exe` or `./fll-toast.exe` from its working folder. If Microsoft Defender SmartScreen shows an *unrecognized app* warning, verify the file came from this release, then use **More info > Run anyway** if that option is offered. See [Microsoft's downloaded-file instructions](https://support.microsoft.com/en-us/windows/security/information-about-the-attachment-manager-in-microsoft-windows).
+
+**macOS:** Extract the archive for your Mac's processor. In Terminal, change to the folder containing the program and run `./fll-maestro` or `./fll-toast`. These Mac builds are not signed or notarized. If macOS blocks a first run because it cannot verify the developer, try to open that program once, then go to **System Settings > Privacy & Security**, scroll to the blocked-program message, select **Open Anyway**, and confirm **Open**. Repeat for the other program if needed. Do not override a warning that the program is damaged or will harm your computer. See [Apple's instructions for opening an unverified app](https://support.apple.com/en-us/102445).
+
 GitHub Actions builds each platform on its native operating system. A manual workflow run produces temporary test artifacts without creating a release. A matching version tag builds the same three packages and creates a draft release for final testing and publication. The Mac programs are currently unsigned and unnotarized, so macOS may require approval in Privacy & Security before their first run.
 
 PyInstaller is used only while building; neither program imports it or requires Python on the end user's computer. Maintainer instructions for local builds, manual GitHub test builds, version tags, and draft releases are in [DEVELOPMENT.md](DEVELOPMENT.md).
@@ -85,6 +93,8 @@ Once you download the repo, do the following:
    - If you have multiple configuration files, you'll see a numbered list to choose from
 5) Enter a tournament name to build one, or press ENTER to build all. Watch for warnings/errors.
 6) When builds succeed, share the generated tournament folders via your preferred cloud service (OneDrive, Google Drive, Dropbox) with tournament directors and judge advisors.
+
+MAESTRO locks cells outside the OJS tables in newly generated workbooks. If you have older workbooks with editable cells beyond a table, use an updated MAESTRO build to regenerate them before scoring begins. Regenerating an event workbook replaces its entries, so keep scored files rather than rebuilding them in place.
 
 **Note**: MAESTRO automatically scans for all `.json` files and validates them. Only files containing the required configuration keys (`season_yr`, `ceremony.program_season_name`, `using_divisions`, `tournament_folder`, `filename`, `tournament_template`) will be shown as options.
 
