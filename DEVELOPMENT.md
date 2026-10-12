@@ -40,6 +40,18 @@ This is the same program packaged for tournament directors. It does not bypass v
 
 Without `--tournament-dir`, TOAST looks for tournament inputs in the current directory and then beside the script or executable. A tournament director can therefore place `fll-toast.exe` in the tournament folder and run it without arguments.
 
+## Embedded tournament configuration
+
+MAESTRO first merges every division's allocations into a working JSON file. After all selected workbooks have been generated, a final pass writes the same complete JSON payload into each OJS's very-hidden `_TOAST_Config` worksheet. Workbook division identity is stored separately from the shared payload. Schema version 1 and chunked JSON avoid Excel's per-cell text limit.
+
+The working JSON is then archived under `<tournament_folder>/_maestro-config/<short_name>.json` and removed from the individual director folder. Keep `_maestro-config` locally; distribute the individual tournament folders. This archive is for inspection, not TOAST input. Editing it does not update embedded data; regenerate the tournament through MAESTRO when allocations change.
+
+TOAST discovers `.xlsm` files by embedded tournament and division identity, so workbook renames are supported. The lowest division present supplies the authoritative config (D1 before D2). Differing higher-division payloads produce a warning and do not override it. A sole non-division workbook supplies its own config. Duplicate division files, mixed tournaments, missing configured divisions, and malformed or unsupported embedded data stop generation.
+
+Embedded folders always use TOAST's shared templates. During development, older folders without embedded metadata still support their local `tournament_config.json` and local templates. Embedded configuration takes precedence over loose JSON. The OJS F2 toggle remains the source of dual-emcee mode. Both tournament input sheets have matching columns, including `Div`. Each Single Division row must specify D1 or D2; that value labels output titles without enabling split award allocations. Blank or invalid Div values stop MAESTRO before output cleanup. Helper feeds the workbook filename formulas only; MAESTRO generates filenames from season JSON and does not read Helper.
+
+Do not run the embedding finalizer on scored workbooks as a migration: openpyxl saves formulas without Excel's calculation caches. Existing scored fixtures are left untouched; integration tests add embedded metadata in memory. Newly generated workbooks must be calculated and saved in Excel before TOAST, as usual.
+
 ## Tests
 
 Run the complete test suite before packaging:
@@ -48,7 +60,7 @@ Run the complete test suite before packaging:
 .venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-The always-available tests cover score boundaries, rubric and GP validation, generated workbook formulas, and template-variable validation. Additional integration tests cover division and non-division rendering, award and advancement allocation, workbook caching, and command-line execution. Those integration tests run only when the ignored local Dunford fixtures are present; otherwise they report as skipped. If the fixtures exist, they must contain a complete scored tournament.
+The always-available tests cover score boundaries, rubric and GP validation, generated workbook formulas, and template-variable validation. Additional integration tests cover division and non-division rendering, award and advancement allocation, workbook caching, and command-line execution. Those integration tests run only when the ignored local Dunford/Brindlewick fixtures are present; otherwise they report as skipped. If the fixtures exist, they must contain a complete scored tournament.
 
 The current season maximum robot-game score is configured as `robot_game_max_score` in the season JSON. Generated tournament configurations store it as `INFO.robot_game_max_score`; TOAST defaults to 530 when an older configuration omits it.
 
@@ -79,7 +91,9 @@ dist\fll-toast.exe --help
 
 On macOS, use `./dist/fll-toast --help`.
 
-The TOAST executable contains Python and all Python dependencies. It does not contain season JSON files, OJS workbooks, instructions, or Jinja templates. Run MAESTRO from source beside its regional configuration and source files. TOAST must be delivered with each generated tournament folder and its configuration, workbook, and templates.
+The TOAST executable contains Python, its dependencies, and all four ceremony/summary Jinja templates. Source runs load the same editable templates from the repository root; frozen runs load them from PyInstaller's asset directory. Editing a template does not require a build for local testing. Build and smoke-test the packaged executable before releasing template changes.
+
+MAESTRO remains a source-only authoring tool with external season JSON and templates. New director folders contain OJS workbooks, available TOAST binaries, instructions, and the fill-in form. They do not need loose JSON or Jinja files. Rebuild tournament folders with the updated MAESTRO before distributing them with the new TOAST; old binaries cannot read embedded configuration.
 
 Executables are ignored by Git and distributed through the release archives. For source-mode MAESTRO on Windows, copy `dist/fll-toast.exe` or the released `fll-toast.exe` beside `fll-maestro.py`. For cross-platform tournament folders, also put each Mac TOAST binary there under the names `fll-toast-macos-intel` and `fll-toast-macos-apple-silicon`; MAESTRO copies these extra builds when present. The source workbooks (`.xlsx`/`.xlsm`) and `instructions.pdf` remain tracked.
 

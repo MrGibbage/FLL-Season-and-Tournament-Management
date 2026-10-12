@@ -41,6 +41,22 @@ class CompanionToastTests(unittest.TestCase):
             self.assertEqual((tournament_root / 'Example' / 'fll-toast-macos-apple-silicon').read_bytes(),
                              b'Apple silicon TOAST')
 
+    def test_director_folder_keeps_pdf_and_omits_authoring_templates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'Example').mkdir()
+            (root / 'instructions.pdf').write_bytes(b'instructions')
+            (root / 'template.xlsm').write_bytes(b'OJS')
+            for divisions in (False, True):
+                copy_files(pd.Series({'Short Name': 'Example', 'OJS_FileName': 'example.xlsm'}),
+                           str(root), str(root / 'template.xlsm'),
+                           [{'source': 'instructions.pdf', 'dest': 'instructions.pdf'}],
+                           [{'type': 'script_template', 'source': 'not-needed.jinja', 'dest': 'script_template.html.jinja'}],
+                           [{'type': 'summary_template', 'source': 'not-needed.jinja', 'dest': 'summary_template.html.jinja'}],
+                           str(root), divisions)
+                self.assertEqual((root / 'Example/instructions.pdf').read_bytes(), b'instructions')
+                self.assertFalse(list((root / 'Example').glob('*.jinja')))
+
     def test_extra_platform_binaries_are_optional(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

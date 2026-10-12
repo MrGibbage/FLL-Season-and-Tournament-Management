@@ -1,6 +1,7 @@
 """Regression checks using the current season fixtures; no workbooks are written."""
 
 import io
+import json
 from pathlib import Path
 import unittest
 import warnings
@@ -8,6 +9,7 @@ import warnings
 import openpyxl
 
 from modules.excel_operations import read_table_as_df
+from modules.season_config import tournament_identity
 from modules.worksheet_setup import (
     copy_award_def,
     resize_worksheets,
@@ -35,6 +37,10 @@ class ScoringSetupTests(unittest.TestCase):
             awards = read_table_as_df(str(source), "AwardDef", "AwardDef").fillna(0)
             assignments = read_table_as_df(str(source), "Assignments", "Assignments").fillna(0)
             tournament_rows = tournaments[tournaments["Short Name"] == name].copy()
+            season = json.loads((ROOT / f"qualifiers-{suffix}.json").read_text())
+            for index, row in tournament_rows.iterrows():
+                for key, value in tournament_identity(row, season).items():
+                    tournament_rows.at[index, key] = value
             shared_errors = validate_shared_award_counts(tournament_rows, awards, divisions)
             if divisions and name == "Dunford":
                 self.assertFalse(shared_errors)

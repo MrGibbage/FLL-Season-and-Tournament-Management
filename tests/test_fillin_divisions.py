@@ -7,7 +7,8 @@ from jinja2 import Environment, FileSystemLoader
 ROOT = Path(__file__).resolve().parents[1]
 source = ast.parse((ROOT / "fll-maestro.py").read_text(encoding="utf-8"))
 function = next(n for n in source.body if isinstance(n, ast.FunctionDef) and n.name == "build_fillin_template_data")
-namespace = {}
+from modules.tournament_assets import tournament_display_title
+namespace = {"tournament_display_title": tournament_display_title}
 exec(compile(ast.Module(body=[function], type_ignores=[]), str(ROOT / "fll-maestro.py"), "exec"), namespace)
 build_data = namespace["build_fillin_template_data"]
 

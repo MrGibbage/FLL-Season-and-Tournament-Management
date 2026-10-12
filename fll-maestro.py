@@ -1,5 +1,5 @@
 # Manual version string (edit as needed)
-MAESTRO_VERSION = "1.00.08"
+MAESTRO_VERSION = "1.00.09"
 
 # ...existing code...
 
@@ -31,7 +31,8 @@ import pandas as pd
 import json
 
 # Import from modules
-from modules.season_config import program_season_name, using_divisions as config_using_divisions, tournament_identity
+from modules.tournament_assets import finalize_tournament_assets, tournament_display_title
+from modules.season_config import program_season_name, using_divisions as config_using_divisions, tournament_identity, single_division_code
 from modules.logger import setup_logger, print_error
 from modules.constants import *
 from modules.file_operations import (
@@ -469,7 +470,7 @@ def build_fillin_template_data(tourn_config: dict) -> dict:
             rows_other.extend(expand_award(award))
 
     return {
-        "tournament_name": info_section.get("tournament_long_name", ""),
+        "tournament_name": tournament_display_title(info_section),
         "rows_robot": rows_robot,
         "rows_core": rows_core,
         "rows_judges": rows_judges,
@@ -751,6 +752,13 @@ def main():
                     },
                 )
 
+    if not using_divisions:
+        for _, tournament_row in dfTournaments.iterrows():
+            try:
+                single_division_code(tournament_row)
+            except ValueError as error:
+                print_error(logger, str(error))
+
     shared_award_errors = validate_shared_award_counts(
         dfTournaments, dfAwardDef, using_divisions
     )
@@ -825,6 +833,8 @@ def main():
     division_mismatches = []
     award_count_issues = {}  # tournament_name -> list of mismatch messages
 
+    completed_folders = set()
+
     for index, row in dfTournaments.iterrows():
         tournament_name = f"{row[COL_SHORT_NAME]} {row.get(COL_DIVISION, '')}".strip()
 
@@ -850,44 +860,6 @@ def main():
             using_divisions,
         )
         progress.update("Files copied")
-
-        # Render fill-in awards form (paper backup) directly into the tournament folder
-        try:
-            # Use maestro root directory to find fill-in template (not copied to tournament folder)
-            renderer = CeremonyRenderer(dir_path)
-
-            # Select template based on divisions - this is an early/simple render
-            # The more detailed render happens after tournament_config.json is created
-            fillin_template_file = resolve_fillin_template_filename(
-                config,
-                using_divisions,
-                default_divisions="champ_fillin_template-with-divisions.html.jinja",
-                default_no_divisions="fillin_template.html.jinja",
-            )
-
-            fillin_output = os.path.join(newpath, "fillin_form.html")
-
-            template_data = {
-                "tournament_name": row.get(COL_LONG_NAME, row.get(COL_SHORT_NAME, "")),
-                "awards_config": config.get("AWARDS", []),
-            }
-
-            errors, warnings = renderer.validate_template_variables(
-                fillin_template_file, template_data, set()
-            )
-            if errors:
-                logger.error(f"Fill-in template missing critical variables: {errors}")
-            if warnings:
-                print_warning(f"Fill-in form missing optional variables: {', '.join(warnings)}")
-
-            if renderer.render(fillin_template_file, template_data, fillin_output):
-                print_success("Fill-in awards form created")
-            else:
-                print_warning("Fill-in awards form could not be generated")
-                logger.warning(f"Fill-in form render failed for {newpath}")
-        except Exception as e:
-            print_warning("Unable to generate fill-in awards form")
-            logger.warning(f"Fill-in form generation failed for {newpath}: {e}")
 
         # Process OJS file
         ojs_name = row.get(COL_OJS_FILENAME)
@@ -1010,7 +982,13 @@ def main():
             print_warning("Unable to generate fill-in awards form")
             logger.warning(f"Fill-in form generation failed for {newpath}: {e}")
 
+        completed_folders.add(newpath)
         progress.complete(f"✓ {tournament_name} complete!")
+
+    # Every division has now contributed its allocations to the merged JSON.
+    for folder in sorted(completed_folders):
+        finalize_tournament_assets(folder)
+        print_success(f"Embedded complete tournament configuration: {os.path.basename(folder)}")
 
     if shared_award_errors:
         print(f"\n{Fore.YELLOW}{'═' * 60}{Style.RESET_ALL}")

@@ -27,6 +27,7 @@ from .constants import (
     SHEET_TEAM_INFO,
 )
 from .logger import print_error
+from .season_config import single_division_code
 
 
 logger = logging.getLogger("ojs_builder")
@@ -186,6 +187,10 @@ def copy_files(
             f"Using non-divisions mode: copying {len(no_divisions_only_files)} non-division-specific files"
         )
 
+    # TOAST supplies its own ceremony/summary templates; only authoring uses them.
+    files_to_copy = [entry for entry in files_to_copy
+                     if entry.get("type") not in {"script_template", "summary_template"}]
+
     # Copy all files
     for file_mapping in files_to_copy:
         try:
@@ -342,6 +347,8 @@ def generate_tournament_config(
             "tournament_long_name": tournament.get(COL_LONG_NAME, ""),
             "tournament_date": tourn_date,
             "using_divisions": using_divisions,
+            "division_label": f"Division {single_division_code(tournament)[1:]}" if not using_divisions else "",
+            "single_division": single_division_code(tournament) if not using_divisions else "",
             "dual_emcee": dual_emcee,  # Will be updated below
             "ojs_files": ojs_files,
         }

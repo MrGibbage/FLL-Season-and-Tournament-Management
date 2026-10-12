@@ -5,7 +5,9 @@ a = Analysis(
     ['fll-toast.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[(f"{kind}_template-{suffix}.html.jinja", ".")
+           for kind in ("script", "summary")
+           for suffix in ("with-divisions", "without-divisions")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -321,7 +321,7 @@ def set_up_meta_worksheet(
     using_divisions: bool,
 ) -> None:
     """Populate the metadata worksheet with tournament information."""
-    d = tournament[COL_DIVISION] if using_divisions else ""
+    d = tournament.get(COL_DIVISION, "")
     logger.info(f"Setting up metadata for {tournament[COL_SHORT_NAME]} {d}")
 
     scriptfile = os.path.join(tournament_folder, tournament[COL_SHORT_NAME], FILE_CLOSING_CEREMONY)
@@ -340,7 +340,7 @@ def set_up_meta_worksheet(
     dfMeta.loc[len(dfMeta)] = {"Key": "Completed Script File", "Value": scriptfile}
     dfMeta.loc[len(dfMeta)] = {"Key": "Using Divisions", "Value": using_divisions}
 
-    if using_divisions:
+    if d:
         dfMeta.loc[len(dfMeta)] = {"Key": "Division", "Value": d}
 
     adv_count = _to_int(tournament[COL_ADVANCING])

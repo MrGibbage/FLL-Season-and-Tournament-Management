@@ -22,7 +22,7 @@ from colorama import init, Fore, Style
 
 
 # Application version. Edit manually as needed.
-TOAST_VERSION = "1.00.08"
+TOAST_VERSION = "1.00.09"
 
 # Suppress openpyxl warnings about conditional formatting
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -35,6 +35,7 @@ from modules.ceremony_validator import OJSValidator
 from modules.ceremony_data_collector import CeremonyDataCollector
 from modules.ceremony_renderer import CeremonyRenderer, ceremony_context
 from modules.ceremony_workbooks import CeremonyWorkbooks
+from modules.tournament_assets import discover_embedded_config, toast_template_directory, toast_template_name, tournament_display_title
 
 # Initialize colorama
 for stream in (sys.stdout, sys.stderr):
@@ -215,7 +216,9 @@ def main(workbooks=None):
     if args.tournament_dir:
         base_dir = os.path.abspath(args.tournament_dir)
         base_note = "--tournament-dir"
-    elif os.path.exists(os.path.join(cwd_dir, "tournament_config.json")):
+    elif os.path.exists(os.path.join(cwd_dir, "tournament_config.json")) or any(
+        name.lower().endswith(".xlsm") and not name.startswith("~$") for name in os.listdir(cwd_dir)
+    ):
         base_dir = cwd_dir
         base_note = "working directory"
     else:
@@ -241,7 +244,15 @@ def main(workbooks=None):
     logger.info(f"Asset base: {base_dir} ({base_note})")
 
     config_path = os.path.join(base_dir, "tournament_config.json")
-    config = load_config(config_path)
+    embedded = discover_embedded_config(base_dir, workbooks)
+    if embedded is not None:
+        config, config_warnings, config_source = embedded
+        print(f"Tournament configuration: {config_source}")
+        for warning in config_warnings:
+            print_warning(warning)
+    else:
+        # Authoring/legacy folders remain usable during development.
+        config = load_config(config_path)
 
     if not config:
         print_error(logger, "Unable to load configuration; exiting.")
@@ -448,7 +459,7 @@ def main(workbooks=None):
     print_header("COLLECTING AWARD DATA")
     collector = CeremonyDataCollector(config, dual_emcee=dual_emcee, workbooks=workbooks)
     template_data = ceremony_context(info)
-    template_data["tournament_name"] = info["tournament_long_name"]
+    template_data["tournament_name"] = tournament_display_title(info)
     template_data["using_divisions"] = 1 if using_divisions else 0
     template_data["dual_emcee"] = dual_emcee
     template_data["awards_config"] = config["AWARDS"]
@@ -665,14 +676,15 @@ def main(workbooks=None):
             print(f"  {warning}")
 
     print_header("RENDERING CEREMONY OUTPUTS")
-    renderer = CeremonyRenderer(base_dir)
+    renderer = CeremonyRenderer(str(toast_template_directory()) if embedded is not None else base_dir)
     outputs = []
     # Validate and render both templates before writing either output.
     for key, default, suffix in [
         ('script_template', 'script_template.html.jinja', 'closing-ceremony'),
         ('summary_template', 'summary_template.html.jinja', 'summary'),
     ]:
-        filename = info.get(key, default)
+        filename = (toast_template_name(key.removesuffix("_template"), using_divisions)
+                    if embedded is not None else info.get(key, default))
         required = renderer.extract_template_variables(filename)
         errors, missing = renderer.validate_template_variables(filename, template_data, required)
         if errors or missing:

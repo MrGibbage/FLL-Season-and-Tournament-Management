@@ -6,7 +6,7 @@
   "notes_template": "This is the template OJS that will be copied into each of the tournament folders (after being modified for each tournament)",
   "tournament_template": "2026-Qualifier-Template-with-divisions.xlsm",
   "fillin_template": "fillin_template-with-divisions.html.jinja",
-  "notes_copy_file_lists": "Files to copy into tournament folders. Common files are always copied. Division-specific files are copied based on using_divisions setting. Each entry maps source filename to destination filename.",
+  "notes_copy_file_lists": "Files to copy into tournament folders. Common files are always copied. Division-specific entries identify authoring templates; script/summary templates are bundled into TOAST and are not copied into director folders. Other files are copied based on using_divisions setting. Each entry maps source filename to destination filename.",
   "copy_file_list_common": [
     {
       "source": "instructions.pdf",

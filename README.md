@@ -26,6 +26,8 @@ Includes two tools for tournament management:
 - **Supports all tournament types**: Division tournaments (such as VA-DC) and non-division tournaments
 - **Inputs**: Uses an easy-to-understand excel spreadsheet for all tournaments and teams assigned to those tournaments. Spreadsheet also allocates awards per tournament. Also uses a single json file for overall season configuration.
 
+Tournament configuration is embedded in a very-hidden OJS worksheet. Every division receives the same complete configuration; TOAST follows the lowest division's copy if they differ. Ceremony and summary templates ship inside TOAST, so directors do not need loose JSON or Jinja files. MAESTRO keeps its authoring inputs external and archives generated JSON separately in `_maestro-config` beside the tournament folders.
+
 ## Improved OJS Features
 
 - **Judging pods**: Statistics for judging pods

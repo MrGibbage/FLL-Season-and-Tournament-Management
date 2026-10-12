@@ -1,3 +1,10 @@
+## 1.00.09
+- Bundle division and single-division ceremony/summary templates inside the shared TOAST executables.
+- Embed identical complete tournament configuration in each OJS; use the lowest division as authoritative.
+- Keep authoring JSON in tournaments/_maestro-config, outside director folders.
+- Label form, summary, and ceremony titles with the event's divisions; single-division labels come from the required Div column on the Single Division worksheet.
+- Include division-aware advancement and alternate entries in forms and historical summaries.
+
 # Release Notes
 
 ## 0.9.0

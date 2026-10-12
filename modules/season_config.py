@@ -33,3 +33,13 @@ def tournament_identity(tournament, config):
     if not filename.lower().endswith(".xlsm") or any(c in filename for c in '<>:"/\\|?*'):
         raise ValueError(f"Invalid generated OJS filename: {filename!r}")
     return {COL_LONG_NAME: name, COL_OJS_FILENAME: filename}
+
+
+def single_division_code(tournament):
+    """Require explicit division identity even when awards use the single-event path."""
+    value = str(tournament.get("Div", "")).strip().upper()
+    if value in {"1", "2"}:
+        value = f"D{value}"
+    if value not in {"D1", "D2"}:
+        raise ValueError(f"{tournament.get('Short Name', 'Tournament')}: set Div to D1 or D2 on the Single Division worksheet")
+    return value

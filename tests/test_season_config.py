@@ -8,13 +8,20 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from modules.season_config import program_season_name, tournament_identity, using_divisions
+from modules.season_config import program_season_name, tournament_identity, using_divisions, single_division_code
 from modules.worksheet_setup import set_up_meta_worksheet
 from modules.constants import (COL_SHORT_NAME, COL_LONG_NAME, COL_ADVANCING, COL_OJS_FILENAME)
 
 ROOT = Path(__file__).resolve().parents[1]
 
 class SeasonConfigTests(unittest.TestCase):
+    def test_single_division_requires_explicit_identity(self):
+        self.assertEqual(single_division_code({"Div": "D2"}), "D2")
+        self.assertEqual(single_division_code({"Div": "d1"}), "D1")
+        for value in [None, "", 0, "D3"]:
+            with self.assertRaises(ValueError):
+                single_division_code({"Short Name": "Test", "Div": value})
+
     def test_discovery_requires_nested_name(self):
         with contextlib.redirect_stdout(io.StringIO()):
             maestro = runpy.run_path(str(ROOT / 'fll-maestro.py'), init_globals={'logger': logging.getLogger('test')})
