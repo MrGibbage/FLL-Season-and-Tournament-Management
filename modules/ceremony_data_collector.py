@@ -93,6 +93,12 @@ class CeremonyDataCollector:
         return [(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]))
                 for _, row in df[df['Advance?'] == 'Yes'].iterrows()]
 
+    def collect_alternate_teams(self, ojs_path):
+        """Return the saved alternate selection for the historical summary."""
+        df = self.workbooks.table(ojs_path, SHEET_RESULTS, TABLE_TOURNAMENT_DATA)
+        return [(int(row[COL_TEAM_NUMBER]), str(row[COL_TEAM_NAME]))
+                for _, row in df[df['Advance?'] == 'Alt'].iterrows()]
+
     def collect_robot_game_awards(self, ojs_path, count, division=""):
         df = self.workbooks.table(ojs_path, SHEET_RESULTS, TABLE_TOURNAMENT_DATA)
         selected = df[df['Robot Game Rank'].between(1, count)].sort_values('Robot Game Rank')

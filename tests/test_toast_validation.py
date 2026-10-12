@@ -98,7 +98,7 @@ class TournamentValidationTests(unittest.TestCase):
         errors = '\n'.join(str(e) for e in self.validate().errors)
         self.assertIn('saved calculation', errors)
         self.assertIn('Advance?', errors)
-        self.assertIn('Judges 1', errors)
+        self.assertIn('Judges Awards: 3 selected, 2 allocated', errors)
 
     def test_division_render_has_both_team_lists(self):
         module = runpy.run_path(str(ROOT / 'fll-toast.py'))

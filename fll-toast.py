@@ -497,6 +497,9 @@ def main(workbooks=None):
     if using_divisions:
         for entry in division_entries:
             adv = collector.collect_advancing_teams(entry["path"], entry["label"])
+            template_data[f"ALT_{entry['code']}"] = collector.format_team_list_as_html(
+                collector.collect_alternate_teams(entry["path"])
+            )
             if entry["code"] == "D1":
                 template_data["ADV_D1"] = collector.format_team_list_as_html(adv)
             elif entry["code"] == "D2":
@@ -504,6 +507,9 @@ def main(workbooks=None):
     else:
         adv_teams = collector.collect_advancing_teams(division_entries[0]["path"])
         template_data["ADV"] = collector.format_team_list_as_html(adv_teams)
+        template_data["ALT"] = collector.format_team_list_as_html(
+            collector.collect_alternate_teams(division_entries[0]["path"])
+        )
 
     print("Collecting award winners...")
     for award in config["AWARDS"]:
@@ -623,6 +629,9 @@ def main(workbooks=None):
         "div1_list",
         "div2_list",
         "team_list",
+        "ALT",
+        "ALT_D1",
+        "ALT_D2",
         "ADV_D1",
         "ADV_D2",
         "ADV",

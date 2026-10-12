@@ -87,6 +87,19 @@ class CeremonyTemplateTests(unittest.TestCase):
             self.assertIn('<p>Team 123</p>', html)
             self.assertIn('<p>Team 456</p>', html)
 
+    def test_division_advancement_without_combined_tag(self):
+        renderer = CeremonyRenderer(str(ROOT))
+        name = 'script_template-with-divisions.html.jinja'
+        data = dict.fromkeys(renderer.extract_template_variables(name), '')
+        data.update(ceremony_context({}))
+        data.update(ja_count=0, judges_missing_count=0, ADV='', ADV_D1='',
+                    ADV_D2='<p>Team 123</p>', tournament_name='Test')
+        data.pop('bg_color_0', None)
+        data.pop('bg_color_1', None)
+        html = renderer.render_text(name, data)
+        self.assertIn('<h2>Advancing Teams</h2>', html)
+        self.assertIn('<p>Team 123</p>', html)
+
     def test_legacy_config(self):
         self.assertIn('current season', self.render('without-divisions', {}))
         self.assertIn('Legacy', self.render('without-divisions', {'season_name': 'Legacy'}))

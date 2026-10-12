@@ -44,10 +44,16 @@
         <h2>Champion's Award</h2>
         {{ J_AWD_CHAMP_D1|safe }} {{ J_AWD_CHAMP_D2|safe }}
 
-        {% if ADV %}
+        {% if ADV_D1 or ADV_D2 %}
         <h2>Advancing Teams</h2>
         <p><span class="highlight0">The teams that are advancing are</span></p>
-        {{ ADV_D1|safe }} {{ ADV_D2|safe }}
+        {% if ADV_D1 %}<h3>Division 1 (D1)</h3>{{ ADV_D1|safe }}{% endif %}
+        {% if ADV_D2 %}<h3>Division 2 (D2)</h3>{{ ADV_D2|safe }}{% endif %}
+        {% endif %}
+        {% if ALT_D1 or ALT_D2 %}
+        <h2>Alternates</h2>
+        {% if ALT_D1 %}<h3>Division 1 (D1)</h3>{{ ALT_D1|safe }}{% endif %}
+        {% if ALT_D2 %}<h3>Division 2 (D2)</h3>{{ ALT_D2|safe }}{% endif %}
         {% endif %}
     </body>
 </html>

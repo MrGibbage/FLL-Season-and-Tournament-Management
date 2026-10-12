@@ -61,3 +61,53 @@ class ToastCliTests(unittest.TestCase):
                 text = path.read_text(encoding="utf-8")
                 self.assertIn(info["tournament_long_name"], text)
                 self.assertIn("Team ", text)
+
+    def test_saved_tournaments_include_alternates_in_summary(self):
+        for name, suffix, alternates in [
+            ("Dunford", "with-divisions", [43930, 65394]),
+            ("Brindlewick", "without-divisions", [71574]),
+        ]:
+            with self.subTest(tournament=name), tempfile.TemporaryDirectory() as directory:
+                folder = ROOT / "tournaments" / name
+                if not (folder / "tournament_config.json").exists():
+                    self.skipTest("Requires local scored tournament fixtures")
+                config = json.loads((folder / "tournament_config.json").read_text(encoding="utf-8"))
+                config["INFO"]["dual_emcee"] = True
+                base = Path(directory)
+                for entry in config["INFO"]["ojs_files"]:
+                    entry["filename"] = str(folder / entry["filename"])
+                for key in ["script_template", "summary_template"]:
+                    (base / config["INFO"][key]).write_bytes(
+                        (ROOT / f"{key}-{suffix}.html.jinja").read_bytes())
+                (base / "tournament_config.json").write_text(json.dumps(config), encoding="utf-8")
+                import io
+                import runpy
+                from unittest.mock import patch
+                from modules.ceremony_workbooks import CeremonyWorkbooks
+                cache = CeremonyWorkbooks()
+                try:
+                    # Set the actual OJS toggle in memory; keep saved score caches and files intact.
+                    for entry in config["INFO"]["ojs_files"]:
+                        cache.workbook(entry["filename"])["Team and Program Information"]["F2"] = True
+                    with patch("sys.argv", ["fll-toast.py", "--tournament-dir", str(base)]), \
+                         patch("builtins.input", return_value="y"), patch("sys.stdout", new=io.StringIO()):
+                        runpy.run_path(str(ROOT / "fll-toast.py"))["main"](cache)
+                finally:
+                    cache.close()
+                ceremony = next(base.glob("*-closing-ceremony.html")).read_text(encoding="utf-8")
+                self.assertIn("background-color: lightblue", ceremony)
+                self.assertIn("background-color: yellow", ceremony)
+                self.assertIn("<h2>Advancing Teams</h2>", ceremony)
+                import re
+                colors = re.findall(r'<span class="highlight([01])">', ceremony)
+                self.assertGreater(len(colors), 30)
+                changes = sum(left != right for left, right in zip(colors, colors[1:]))
+                self.assertGreater(changes / (len(colors) - 1), 0.65)
+                summary = next(base.glob("*-summary.html")).read_text(encoding="utf-8")
+                alternate_section = summary.split("<h2>Alternate", 1)[1]
+                for number in alternates:
+                    self.assertIn(f"Team {number},", alternate_section)
+                if name == "Brindlewick":
+                    for number in [72326, 72066, 71459]:
+                        self.assertIn(f"Team {number},", summary.split("<h2>Alternate", 1)[0])
+                    self.assertNotIn("Division 1", summary)
