@@ -62,10 +62,10 @@ class EmbeddedConfigTests(unittest.TestCase):
         cache = CeremonyWorkbooks()
         for division in divisions:
             path = folder / f"renamed-{division or 'only'}.xlsm"
-            path.touch()
             book = Workbook()
             write_embedded_config(book, changed if changed and division == "D2" else config, division)
-            cache.books[str(path.resolve())] = book
+            book.save(path)
+            book.close()
         self.addCleanup(cache.close)
         return cache
 
