@@ -12,7 +12,7 @@ from modules.file_operations import available_toast_mappings, companion_toast_ma
 class CompanionToastTests(unittest.TestCase):
     def test_platform_filenames(self):
         self.assertEqual(companion_toast_mapping('win32'),
-                         {'source': 'fll-toast.exe', 'dest': 'fll-toast.exe'})
+                         {'source': 'fll-toast-win.exe', 'dest': 'fll-toast-win.exe'})
         self.assertEqual(companion_toast_mapping('darwin'),
                          {'source': 'fll-toast', 'dest': 'fll-toast'})
 
@@ -23,7 +23,7 @@ class CompanionToastTests(unittest.TestCase):
             source.mkdir()
             tournament_root = root / 'tournaments'
             (tournament_root / 'Example').mkdir(parents=True)
-            (source / 'fll-toast.exe').write_bytes(b'current TOAST')
+            (source / 'fll-toast-win.exe').write_bytes(b'current TOAST')
             (source / 'fll-toast-macos-intel').write_bytes(b'Intel TOAST')
             (source / 'fll-toast-macos-apple-silicon').write_bytes(b'Apple silicon TOAST')
             template = source / 'template.xlsm'
@@ -34,7 +34,7 @@ class CompanionToastTests(unittest.TestCase):
             copy_files(pd.Series({'Short Name': 'Example', 'OJS_FileName': 'example.xlsm'}),
                        str(source), str(template), mappings,
                        [], [], str(tournament_root), False)
-            self.assertEqual((tournament_root / 'Example' / 'fll-toast.exe').read_bytes(),
+            self.assertEqual((tournament_root / 'Example' / 'fll-toast-win.exe').read_bytes(),
                              b'current TOAST')
             self.assertEqual((tournament_root / 'Example' / 'fll-toast-macos-intel').read_bytes(),
                              b'Intel TOAST')
@@ -65,11 +65,11 @@ class CompanionToastTests(unittest.TestCase):
             (root / 'fll-toast-macos-intel').write_bytes(b'Intel')
             mappings = available_toast_mappings(directory, 'win32')
             self.assertEqual([entry['dest'] for entry in mappings],
-                             ['fll-toast.exe', 'fll-toast-macos-intel'])
+                             ['fll-toast-win.exe', 'fll-toast-macos-intel'])
             (root / 'fll-toast-macos-apple-silicon').write_bytes(b'Apple')
             mappings = available_toast_mappings(directory, 'win32')
             self.assertEqual([entry['dest'] for entry in mappings],
-                             ['fll-toast.exe', 'fll-toast-macos-intel',
+                             ['fll-toast-win.exe', 'fll-toast-macos-intel',
                               'fll-toast-macos-apple-silicon'])
 
 

@@ -53,7 +53,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          & .\dist\fll-toast.exe --help
+          & .\dist\fll-toast-win.exe --help
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Smoke test macOS executable
@@ -64,7 +64,7 @@ jobs:
       - name: Package Windows executable
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive -Path dist\fll-toast.exe -DestinationPath "${{ matrix.archive }}"
+        run: Compress-Archive -Path dist\fll-toast-win.exe -DestinationPath "${{ matrix.archive }}"
 
       - name: Package macOS executable
         if: runner.os == 'macOS'

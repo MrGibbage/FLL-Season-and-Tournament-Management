@@ -38,7 +38,7 @@ TOAST normally runs inside a generated tournament folder. For development, it ca
 
 This is the same program packaged for tournament directors. It does not bypass validation. Save and close the OJS workbooks in desktop Excel first so TOAST reads current calculated values.
 
-Without `--tournament-dir`, TOAST looks for tournament inputs in the current directory and then beside the script or executable. A tournament director can therefore place `fll-toast.exe` in the tournament folder and run it without arguments.
+Without `--tournament-dir`, TOAST looks for tournament inputs in the current directory and then beside the script or executable. A tournament director can therefore place `fll-toast-win.exe` in the tournament folder and run it without arguments.
 
 ## Embedded tournament configuration
 
@@ -80,13 +80,13 @@ Use the checked-in TOAST specification rather than passing `-F` directly:
 
 The results are written to `dist/`:
 
-- Windows: `dist/fll-toast.exe`
+- Windows: `dist/fll-toast-win.exe`
 - macOS: `dist/fll-toast`
 
 Smoke-test TOAST before distribution:
 
 ```powershell
-dist\fll-toast.exe --help
+dist\fll-toast-win.exe --help
 ```
 
 On macOS, use `./dist/fll-toast --help`.
@@ -95,7 +95,7 @@ The TOAST executable contains Python, its dependencies, and all four ceremony/su
 
 MAESTRO remains a source-only authoring tool with external season JSON and templates. New director folders contain OJS workbooks, available TOAST binaries, instructions, and the fill-in form. They do not need loose JSON or Jinja files. Rebuild tournament folders with the updated MAESTRO before distributing them with the new TOAST; old binaries cannot read embedded configuration.
 
-Executables are ignored by Git and distributed through the release archives. For source-mode MAESTRO on Windows, copy `dist/fll-toast.exe` or the released `fll-toast.exe` beside `fll-maestro.py`. For cross-platform tournament folders, also put each Mac TOAST binary there under the names `fll-toast-macos-intel` and `fll-toast-macos-apple-silicon`; MAESTRO copies these extra builds when present. The source workbooks (`.xlsx`/`.xlsm`) and `instructions.pdf` remain tracked.
+Executables are ignored by Git and distributed through the release archives. For source-mode MAESTRO on Windows, copy `dist/fll-toast-win.exe` or the released `fll-toast-win.exe` beside `fll-maestro.py`. For cross-platform tournament folders, also put each Mac TOAST binary there under the names `fll-toast-macos-intel` and `fll-toast-macos-apple-silicon`; MAESTRO copies these extra builds when present. The source workbooks (`.xlsx`/`.xlsm`) and `instructions.pdf` remain tracked.
 
 ## GitHub Actions builds
 

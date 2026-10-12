@@ -35,7 +35,7 @@ logger = logging.getLogger("ojs_builder")
 
 def companion_toast_mapping(platform: str | None = None) -> dict[str, str]:
     """Name the TOAST binary distributed beside MAESTRO on this platform."""
-    executable = "fll-toast.exe" if (platform or sys.platform).startswith("win") else "fll-toast"
+    executable = "fll-toast-win.exe" if (platform or sys.platform).startswith("win") else "fll-toast"
     return {"source": executable, "dest": executable}
 
 
@@ -43,7 +43,7 @@ def available_toast_mappings(directory: str, platform: str | None = None) -> lis
     """Include the host TOAST binary and any extra platform builds on hand."""
     host = companion_toast_mapping(platform)
     mappings = [host]
-    for name in ("fll-toast.exe", "fll-toast-macos-intel", "fll-toast-macos-apple-silicon"):
+    for name in ("fll-toast-win.exe", "fll-toast-macos-intel", "fll-toast-macos-apple-silicon"):
         if name != host["source"] and os.path.isfile(os.path.join(directory, name)):
             mappings.append({"source": name, "dest": name})
     return mappings

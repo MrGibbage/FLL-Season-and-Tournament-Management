@@ -74,7 +74,7 @@ Keep the TOAST executables beside `fll-maestro.py`, the season JSON, source work
 
 Only download the archives from this repository's Releases page. TOAST is a command-line tool: open a terminal in the folder containing the executable so you can read prompts and errors.
 
-**Windows:** Extract `fll-tools-windows-x64.zip`. If Windows blocks `fll-toast.exe`, right-click it in File Explorer, select **Properties**, then on the **General** tab select **Unblock** (if shown), **Apply**, and **OK**. In PowerShell, run `./fll-toast.exe` from its working folder. If Microsoft Defender SmartScreen shows an *unrecognized app* warning, verify the file came from this release, then use **More info > Run anyway** if that option is offered. See [Microsoft's downloaded-file instructions](https://support.microsoft.com/en-us/windows/security/information-about-the-attachment-manager-in-microsoft-windows).
+**Windows:** Extract `fll-tools-windows-x64.zip`. If Windows blocks `fll-toast-win.exe`, right-click it in File Explorer, select **Properties**, then on the **General** tab select **Unblock** (if shown), **Apply**, and **OK**. In PowerShell, run `./fll-toast-win.exe` from its working folder. If Microsoft Defender SmartScreen shows an *unrecognized app* warning, verify the file came from this release, then use **More info > Run anyway** if that option is offered. See [Microsoft's downloaded-file instructions](https://support.microsoft.com/en-us/windows/security/information-about-the-attachment-manager-in-microsoft-windows).
 
 **macOS:** Extract the archive for your Mac's processor. In Terminal, change to the folder containing the program and run `./fll-toast`. In a tournament folder built on Windows, run `./fll-toast-macos-intel` on an Intel Mac or `./fll-toast-macos-apple-silicon` on an Apple silicon Mac. If a transferred binary has lost its executable permission, run `chmod +x` followed by that binary's filename before launching it. These Mac builds are not signed or notarized. If macOS blocks a first run because it cannot verify the developer, try to open that program once, then go to **System Settings > Privacy & Security**, scroll to the blocked-program message, select **Open Anyway**, and confirm **Open**. Do not override a warning that the program is damaged or will harm your computer. See [Apple's instructions for opening an unverified app](https://support.apple.com/en-us/102445).
 
@@ -106,8 +106,8 @@ MAESTRO locks cells outside the OJS tables in newly generated workbooks. If you 
 
 ### OJS usage
 
-Review the included toast-instructions.pdf for worksheet details. Two important requirements: (1) use the desktop version of Excel (cloud Excel disables critical features); (2) enable macros when opening the spreadsheet.  
-When you finish entering scores, awards, and advancing teams, save and close the workbook, then run `fll-toast.exe` (or `python fll-toast.py`).  
+Review the included toast-instructions.pdf for worksheet details. Two important requirements: (1) use the desktop version of Excel (cloud Excel disables critical features); (2) enable macros when opening the spreadsheet.
+When you finish entering scores, awards, and advancing teams, save and close the workbook, then run `fll-toast-win.exe` (or `python fll-toast.py`).
 
 ### Closing Ceremony Script Generator (TOAST)
 
@@ -120,7 +120,7 @@ MAESTRO supports multiple configuration files to manage different tournament typ
 
 **Example files:**
 - `qualifiers.json` - for qualifier tournaments
-- `championship.json` - for championship tournaments  
+- `championship.json` - for championship tournaments
 - `season.json` - traditional single configuration
 
 When you run MAESTRO:
@@ -190,7 +190,7 @@ Each tournament folder gets a `tournament_config.json` with an `INFO.ojs_files` 
   - **IMPORTANT**: Use forward slashes `/` in paths (works on all platforms)
   - Will be created automatically if it doesn't exist
   - Must be an absolute path (full path from root)
-  - Examples: 
+  - Examples:
     - Windows: `"C:/tournaments"` or `"C:/Users/username/Documents/tournaments"`
     - Mac: `"/Users/username/Documents/tournaments"`
     - Linux: `"/home/username/tournaments"`

@@ -1,4 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
+import sys
 
 
 a = Analysis(
@@ -24,7 +25,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='fll-toast',
+    name='fll-toast-win' if sys.platform.startswith('win') else 'fll-toast',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

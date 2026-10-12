@@ -1,3 +1,6 @@
+## Unreleased
+- Name the Windows executable fll-toast-win.exe in builds, release archives, and MAESTRO tournament folders.
+
 ## 1.00.09
 - Bundle division and single-division ceremony/summary templates inside the shared TOAST executables.
 - Embed identical complete tournament configuration in each OJS; use the lowest division as authoritative.
