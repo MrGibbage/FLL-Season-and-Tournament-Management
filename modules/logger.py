@@ -132,6 +132,15 @@ def setup_logger(name: str = "ojs_builder", debug: bool = False, log_dir: Option
     return logger
 
 
+def log_exception_to_file(logger: logging.Logger, message: str) -> None:
+    """Keep expected access-error tracebacks in the log, off the director's console."""
+    record = logger.makeRecord(logger.name, logging.ERROR, __file__, 0,
+                               message, (), sys.exc_info())
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.handle(record)
+
+
 def print_error(logger: logging.Logger, errormsg: str, e: Optional[Exception] = None, error_type: Optional[str] = None, context: Optional[dict] = None) -> None:
     """Log an error message with recovery suggestions and exit the program.
     

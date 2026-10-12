@@ -34,7 +34,8 @@ from modules.logger import setup_logger, print_error
 from modules.ceremony_validator import OJSValidator
 from modules.ceremony_data_collector import CeremonyDataCollector
 from modules.ceremony_renderer import CeremonyRenderer, ceremony_context
-from modules.ceremony_workbooks import CeremonyWorkbooks
+from modules.ceremony_workbooks import CeremonyWorkbooks, OJSWorkbookUnavailable
+from modules.logger import log_exception_to_file
 from modules.tournament_assets import discover_embedded_config, toast_template_directory, toast_template_name, tournament_display_title
 
 # Initialize colorama
@@ -183,6 +184,11 @@ def main(workbooks=None):
         cache = CeremonyWorkbooks()
         try:
             return main(cache)
+        except OJSWorkbookUnavailable as exc:
+            log_exception_to_file(logging.getLogger("ceremony_generator"), f"OJS unavailable: {exc.path}")
+            print_error_msg(str(exc))
+            input("Press ENTER to exit...")
+            sys.exit(1)
         except Exception as exc:
             logging.getLogger("ceremony_generator").exception("TOAST stopped: %s", exc)
             print_error_msg(str(exc))

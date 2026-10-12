@@ -5,6 +5,18 @@ import pandas as pd
 from openpyxl import load_workbook
 
 
+class OJSWorkbookUnavailable(ValueError):
+    """An expected workbook access problem with actionable director instructions."""
+    def __init__(self, path):
+        self.path = path
+        super().__init__(
+            f"TOAST cannot read the OJS workbook: {os.path.basename(path)}\n"
+            "It may be open in Excel or locked by another application.\n"
+            "Save and close the workbook in Excel, then run TOAST again.\n"
+            "If it is already closed, check that you have permission to read the file."
+        )
+
+
 class CeremonyWorkbooks:
     def __init__(self):
         self.books = {}
@@ -15,8 +27,11 @@ class CeremonyWorkbooks:
         if path not in self.books:
             lock = os.path.join(os.path.dirname(path), '~$' + os.path.basename(path))
             if os.path.exists(lock):
-                raise ValueError(f"Close Excel before running TOAST: {path}")
-            self.books[path] = load_workbook(path, data_only=True)
+                raise OJSWorkbookUnavailable(path)
+            try:
+                self.books[path] = load_workbook(path, data_only=True)
+            except PermissionError as error:
+                raise OJSWorkbookUnavailable(path) from error
         return self.books[path]
 
     def table(self, path, sheet, name):

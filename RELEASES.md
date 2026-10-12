@@ -1,7 +1,7 @@
-## Unreleased
-- Name the Windows executable fll-toast-win.exe in builds, release archives, and MAESTRO tournament folders.
-
 ## 1.00.09
+- Name the Windows executable fll-toast-win.exe in builds, release archives, and MAESTRO tournament folders.
+- Show friendly recovery instructions for open or locked OJS files, keeping technical tracebacks in the log.
+- Refresh tournament director instructions.
 - Bundle division and single-division ceremony/summary templates inside the shared TOAST executables.
 - Embed identical complete tournament configuration in each OJS; use the lowest division as authoritative.
 - Keep authoring JSON in tournaments/_maestro-config, outside director folders.
