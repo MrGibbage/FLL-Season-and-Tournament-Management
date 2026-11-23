@@ -64,6 +64,50 @@ from .logger import print_error
 logger = logging.getLogger("ojs_builder")
 
 
+def validate_award_labels(tournaments: pd.DataFrame, award_definitions: pd.DataFrame) -> list[str]:
+    """Check allocated award labels before any tournament output is changed."""
+    errors = []
+    award_columns = [column for column in tournaments.columns
+                     if column.startswith(AWARD_COLUMN_PREFIX_JUDGED)
+                     or column == AWARD_COLUMN_ROBOT_GAME]
+    for _, tournament in tournaments.iterrows():
+        location = f"{tournament[COL_SHORT_NAME]} {tournament.get(COL_DIVISION, '')}".strip()
+        for column in award_columns:
+            raw_count = tournament[column]
+            if pd.isna(raw_count):
+                continue
+            try:
+                count = int(raw_count)
+                if float(raw_count) != count or count < 0:
+                    raise ValueError
+            except (ValueError, TypeError, OverflowError):
+                errors.append(f"{location}: {column} has an invalid award count: {raw_count!r}")
+                continue
+            if count == 0:
+                continue
+            definitions = award_definitions.loc[award_definitions[COL_COLUMN_NAME] == column]
+            if len(definitions) != 1:
+                errors.append(f"{location}: {column} requires exactly one matching AwardDef row "
+                              f"(found {len(definitions)})")
+                continue
+            definition = definitions.iloc[0]
+            name = definition.get("Name", column)
+            labels = set()
+            for number in range(1, count + 1):
+                key = f"{AWARD_LABEL_PREFIX}{number}"
+                value = definition.get(key)
+                # Maestro fills blank workbook cells with zero before this check.
+                if not isinstance(value, str) or not value.strip() or value.strip() in {"0", "0.0"}:
+                    errors.append(f"{location}: {name} has {count} awards allocated, "
+                                  f"but {key} is missing or blank")
+                    continue
+                label = value.strip()
+                if label in labels:
+                    errors.append(f"{location}: {name} has duplicate allocated label {label!r} ({key})")
+                labels.add(label)
+    return errors
+
+
 def validate_shared_award_counts(
     tournaments: pd.DataFrame,
     dfAwardDef: pd.DataFrame,

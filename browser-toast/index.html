@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; connect-src 'none'; frame-src 'self' about:; img-src data: blob:; base-uri 'none'; form-action 'none'">
+<title>TOAST · Tournament ceremony toolkit</title>
+<style>/*STYLE*/</style>
+</head>
+<body>
+<header><div class="brand"><span class="brandmark" aria-hidden="true">T</span><div><strong>TOAST</strong><span>Tournament OJS And Script Toolkit</span></div></div><span class="local-badge">Works offline · Files stay on your computer</span></header>
+<main>
+<div class="intro"><p class="eyebrow">FIRST LEGO League · Tournament day</p><h1>From final results<br>to closing ceremony.</h1><p>Check your saved OJS workbooks, review the results, and prepare your ceremony documents.</p></div>
+<section class="panel" aria-labelledby="choose-heading">
+<div class="section-heading"><span class="step">1</span><div><h2 id="choose-heading">Choose your OJS files</h2><p>Save and close your workbooks in Excel before you start.</p></div></div>
+<div id="dropzone" class="dropzone"><div class="file-symbol" aria-hidden="true">▤</div><p><strong>Drop your OJS workbooks here</strong></p><p>One file for a single division, or both files for a two-division tournament.</p><button id="choose-files" class="button primary" type="button">Choose files</button><input class="file-input" id="files" type="file" accept=".xlsm,.xlsx,.json" multiple aria-label="Choose OJS workbooks and optional legacy configuration"><p class="hint">Excel .xlsm or .xlsx · Up to 25 MB each</p></div>
+<details><summary>Using an older tournament folder?</summary><p>Select <code>tournament_config.json</code> together with the OJS workbooks. Current workbooks already contain the configuration. TOAST uses the ceremony templates included in this version.</p></details>
+<ul id="file-list" class="file-list" aria-label="Selected files"></ul>
+<p id="status" class="status" role="status" aria-live="polite">Choose your files to begin.</p>
+<button id="refresh" class="button primary" type="button" hidden>Check again</button><p id="refresh-help" class="hint" hidden></p>
+<p class="hint">Save changes in Excel before checking again. TOAST reads the saved copy; it cannot see unsaved changes or reliably detect whether Excel is open.</p>
+</section>
+<section id="review" class="panel" hidden aria-labelledby="review-heading">
+<div class="section-heading"><span class="step">2</span><div><h2 id="review-heading">Review your tournament</h2><p id="tournament"></p></div></div>
+<div id="facts" class="facts"></div>
+<div id="errors" class="notice error" hidden><h3>Fix these issues in the OJS, then select the files again</h3><ul></ul><p id="error-next-step"></p></div>
+<div id="warnings" class="notice warning" hidden><h3>Please review</h3><ul></ul><label class="check"><input id="review-warnings" type="checkbox"> I have reviewed these warnings.</label></div>
+<div id="omissions" class="notice warning" hidden><h3>Allocated awards without winners</h3><p>These places will appear as <strong>NONE</strong> in the ceremony documents. If that is intentional, approve the omissions below. Otherwise, correct the OJS and select the files again.</p><ul></ul><label for="approve">Type YES to approve these award omissions</label><input id="approve" type="text" autocomplete="off" spellcheck="false" placeholder="YES" aria-describedby="approval-note"><p id="approval-note" class="hint">Approval applies only to the current selection of files.</p></div>
+<div id="ready" class="notice success" hidden><h3>Ready for your closing ceremony</h3><p>Validation passed. Preview both documents before using them at the event.</p></div>
+<div class="actions"><button id="report" class="button secondary">Download diagnostic report</button><button id="reset" class="button quiet">Start over</button></div>
+</section>
+<section id="documents" class="panel" hidden aria-labelledby="documents-heading">
+<div class="section-heading"><span class="step">3</span><div><h2 id="documents-heading">Your ceremony documents</h2><p>Download HTML files to open, print, or share. Your browser chooses where to save them.</p></div></div>
+<div class="document-cards"><article><span class="eyebrow">For your emcees</span><h3>Closing ceremony</h3><p>The complete script, team introductions, award winners, and advancement announcements.</p><button id="download-script" class="button primary" disabled>Download ceremony</button><button id="preview-script" class="button secondary" disabled>Preview ceremony</button></article><article><span class="eyebrow">For your records</span><h3>Tournament summary</h3><p>A compact record of award winners, advancing teams, and alternates.</p><button id="download-summary" class="button primary" disabled>Download summary</button><button id="preview-summary" class="button secondary" disabled>Preview summary</button></article></div>
+<p id="document-gate" class="hint"></p>
+<div id="preview" hidden><div class="preview-heading"><h3 id="preview-title">Document preview</h3><button id="close-preview" class="button quiet">Close preview</button></div><iframe id="preview-frame" sandbox="" title="Ceremony document preview" referrerpolicy="no-referrer"></iframe></div>
+</section>
+<section id="failure" class="panel" hidden><h2>TOAST could not read these files</h2><p id="failure-message" role="alert"></p><p>Check that you selected saved, unencrypted OJS workbooks from the same tournament. Select the corrected files to try again.</p><button id="failure-report" class="button secondary">Download diagnostic report</button></section>
+</main>
+<footer><strong>TOAST <span id="version"></span></strong><span>No uploads. No account. No installation.</span><details><summary>About this version &amp; licenses</summary><p>This standalone file contains its own workbook reader and ceremony templates. It never changes your OJS workbooks. Use a current version of Chrome, Edge, Firefox, or Safari. See the release validation notes for browser coverage.</p>/*LICENSES*/</details></footer>
+<!--BUNDLES-->
+</body></html>

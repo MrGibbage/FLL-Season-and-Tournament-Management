@@ -56,6 +56,7 @@ from modules.worksheet_setup import (
     remove_external_links,
     fix_named_ranges,
     validate_shared_award_counts,
+    validate_award_labels,
 )
 from modules.ceremony_renderer import CeremonyRenderer
 from modules.user_feedback import (
@@ -758,6 +759,15 @@ def main():
                 single_division_code(tournament_row)
             except ValueError as error:
                 print_error(logger, str(error))
+
+    label_errors = validate_award_labels(dfTournaments, dfAwardDef)
+    if label_errors:
+        print_error(
+            logger,
+            "Award label validation failed:\n" + "\n".join(f"  - {error}" for error in label_errors),
+            error_type="invalid_data",
+            context={"location": "AwardDef pre-flight validation"},
+        )
 
     shared_award_errors = validate_shared_award_counts(
         dfTournaments, dfAwardDef, using_divisions
