@@ -8,7 +8,18 @@
     $('refresh-help').textContent=retainedHandles?'After saving changes in Excel, click Check again to read the latest files.':'This selection cannot be refreshed directly. Check again will ask you to select the saved files so TOAST reads your latest changes.';
   }
   const outputButtons=['download-script','download-summary','preview-script','preview-summary'];
+  let previousOverflow='';
+  function expandPreview(expanded) {
+    const wasExpanded=$('preview').classList.contains('expanded');
+    if(expanded&&!wasExpanded)previousOverflow=document.body.style.overflow;
+    $('preview').classList.toggle('expanded',expanded);
+    document.body.style.overflow=expanded?'hidden':wasExpanded?previousOverflow:document.body.style.overflow;
+    $('expand-preview').textContent=expanded?'Return to TOAST':'Expand preview';
+    $('expand-preview').setAttribute('aria-pressed',String(expanded));
+  }
+  function closePreview() {expandPreview(false);$('preview').hidden=true;$('preview-frame').removeAttribute('srcdoc');}
   function clearView() {
+    closePreview();
     result=null;diagnostic=null;
     for(const id of ['review','documents','failure','preview','ready'])$(id).hidden=true;
     $('preview-frame').removeAttribute('srcdoc');
@@ -22,7 +33,7 @@
     const ready=permitted();outputButtons.forEach(id=>$(id).disabled=!ready);
     $('ready').hidden=!ready;
     $('document-gate').textContent=ready?'Both documents are ready.':result?.validation.errors.length?'Correct the errors before generating documents.':'Review the warnings and approve any intentional award omissions to unlock your documents.';
-    if(!ready){$('preview').hidden=true;$('preview-frame').removeAttribute('srcdoc');}
+    if(!ready)closePreview();
   }
   function notice(id,items) {
     $(id).hidden=!items.length;const list=$(id).querySelector('ul');list.replaceChildren();
@@ -127,7 +138,8 @@
     $('download-'+kind).onclick=()=>{if(permitted())download(result.names[kind],result.outputs[kind]);};
     $('preview-'+kind).onclick=()=>{if(permitted()){$('preview-title').textContent=kind==='script'?'Closing ceremony preview':'Tournament summary preview';$('preview-frame').srcdoc=result.outputs[kind];$('preview').hidden=false;$('preview').scrollIntoView({behavior:'smooth',block:'start'});}};
   }
-  $('close-preview').onclick=()=>{$('preview').hidden=true;$('preview-frame').removeAttribute('srcdoc');};
+  $('expand-preview').onclick=()=>{if(permitted()&&!$('preview').hidden)expandPreview(!$('preview').classList.contains('expanded'));};
+  $('close-preview').onclick=()=>{closePreview();$('preview-script').focus();};
   $('report').onclick=report;$('failure-report').onclick=report;
   $('reset').onclick=()=>{revision++;busy=false;retainedHandles=null;hasSelection=false;clearView();updateRefresh();$('file-list').replaceChildren();$('files').value='';$('status').textContent='Choose your files to begin.';$('dropzone').removeAttribute('aria-busy');$('choose-files').focus();};
   $('version').textContent=Toast.VERSION;

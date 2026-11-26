@@ -28,7 +28,7 @@ def run(browser, executable):
     with tempfile.TemporaryDirectory(prefix='toast-test-', dir=work) as profile:
         path = work / f'browser-toast-results-{browser}.json'
         path.unlink(missing_ok=True)
-        cmd = ['node', str(ROOT / 'scripts/run_browser_toast.mjs'), str(executable), profile, (work / 'toast-browser-suite.html').as_uri(), str(path)]
+        cmd = ['node', str(ROOT / 'scripts/run_browser_toast.mjs'), str(executable), profile, (work / 'toast-browser-suite.html').as_uri(), str(path), (ROOT / 'dist/INSTRUCTIONS.html').as_uri()]
         result = subprocess.run(cmd, capture_output=True, encoding='utf-8', errors='replace', timeout=100)
         (work / f'browser-toast-{browser}.stderr.log').write_text(result.stderr, encoding='utf-8')
         if not path.exists():

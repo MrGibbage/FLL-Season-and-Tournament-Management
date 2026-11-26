@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; connect-src 'none'; frame-src 'self' about:; img-src data: blob:; base-uri 'none'; form-action 'none'">
 <title>TOAST · Tournament ceremony toolkit</title>
+<!--FAVICON-->
 <style>/*STYLE*/</style>
 </head>
 <body>
-<header><div class="brand"><span class="brandmark" aria-hidden="true">T</span><div><strong>TOAST</strong><span>Tournament OJS And Script Toolkit</span></div></div><span class="local-badge">Works offline · Files stay on your computer</span></header>
+<header><div class="brand"><span class="brandmark" aria-hidden="true"><!--BRAND_ICON--></span><div><strong>TOAST</strong><span>Tournament OJS And Script Toolkit</span></div></div><span class="local-badge">Works offline · Files stay on your computer</span></header>
 <main>
 <div class="intro"><p class="eyebrow">FIRST LEGO League · Tournament day</p><h1>From final results<br>to closing ceremony.</h1><p>Check your saved OJS workbooks, review the results, and prepare your ceremony documents.</p></div>
 <section class="panel" aria-labelledby="choose-heading">
@@ -33,7 +34,7 @@
 <div class="section-heading"><span class="step">3</span><div><h2 id="documents-heading">Your ceremony documents</h2><p>Download HTML files to open, print, or share. Your browser chooses where to save them.</p></div></div>
 <div class="document-cards"><article><span class="eyebrow">For your emcees</span><h3>Closing ceremony</h3><p>The complete script, team introductions, award winners, and advancement announcements.</p><button id="download-script" class="button primary" disabled>Download ceremony</button><button id="preview-script" class="button secondary" disabled>Preview ceremony</button></article><article><span class="eyebrow">For your records</span><h3>Tournament summary</h3><p>A compact record of award winners, advancing teams, and alternates.</p><button id="download-summary" class="button primary" disabled>Download summary</button><button id="preview-summary" class="button secondary" disabled>Preview summary</button></article></div>
 <p id="document-gate" class="hint"></p>
-<div id="preview" hidden><div class="preview-heading"><h3 id="preview-title">Document preview</h3><button id="close-preview" class="button quiet">Close preview</button></div><iframe id="preview-frame" sandbox="" title="Ceremony document preview" referrerpolicy="no-referrer"></iframe></div>
+<div id="preview" hidden><div class="preview-heading"><h3 id="preview-title">Document preview</h3><div><button id="expand-preview" class="button secondary" aria-pressed="false">Expand preview</button><button id="close-preview" class="button quiet">Close preview</button></div></div><iframe id="preview-frame" sandbox="" title="Ceremony document preview" referrerpolicy="no-referrer"></iframe></div>
 </section>
 <section id="failure" class="panel" hidden><h2>TOAST could not read these files</h2><p id="failure-message" role="alert"></p><p>Check that you selected saved, unencrypted OJS workbooks from the same tournament. Select the corrected files to try again.</p><button id="failure-report" class="button secondary">Download diagnostic report</button></section>
 </main>

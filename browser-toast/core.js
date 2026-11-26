@@ -1,7 +1,7 @@
 /* TOAST browser engine. Read-only Open XML reader; no network requests. */
 'use strict';
 (() => {
-const VERSION = '1.0.2';
+const VERSION = '1.0.4';
 const LIMITS = Object.freeze({fileBytes:25*1024*1024, unpackedBytes:100*1024*1024, entries:3000, tableCells:200000});
 const own = (o,k) => Object.prototype.hasOwnProperty.call(o,k);
 function parseJson(text) {

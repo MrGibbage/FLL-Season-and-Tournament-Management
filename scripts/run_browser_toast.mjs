@@ -2,7 +2,7 @@
 import {spawn} from 'node:child_process';
 import {writeFile} from 'node:fs/promises';
 import {StringDecoder} from 'node:string_decoder';
-const [executable, profile, url, output] = process.argv.slice(2);
+const [executable, profile, url, output, instructionsUrl] = process.argv.slice(2);
 const child = spawn(executable, ['--headless','--disable-gpu','--no-first-run','--no-default-browser-check','--disable-background-networking','--host-resolver-rules=MAP * ~NOTFOUND','--remote-debugging-pipe','--user-data-dir='+profile],{stdio:['ignore','ignore','pipe','pipe','pipe'],windowsHide:true});
 let id=0, buffer='', stderr='', session;
 const decoder=new StringDecoder('utf8');
@@ -33,6 +33,18 @@ try{
     await rpc('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile},session);
     const shot=await rpc('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},session);
     await writeFile(output.replace(/\.json$/,'-'+label+'.png'),Buffer.from(shot.data,'base64'));
+  }
+  await rpc('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false},session);
+  await rpc('Runtime.evaluate',{expression:`document.getElementById('preview-script').click();document.getElementById('expand-preview').click();`},session);
+  const expanded=await rpc('Page.captureScreenshot',{format:'png',captureBeyondViewport:false},session);
+  await writeFile(output.replace(/\.json$/,'-expanded.png'),Buffer.from(expanded.data,'base64'));
+  if(instructionsUrl){
+    await rpc('Page.navigate',{url:instructionsUrl},session);await new Promise(resolve=>setTimeout(resolve,200));
+    for(const [label,width,height,mobile] of [['instructions',1280,1000,false],['instructions-mobile',390,844,true]]){
+      await rpc('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile},session);
+      const shot=await rpc('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},session);
+      await writeFile(output.replace(/\.json$/,'-'+label+'.png'),Buffer.from(shot.data,'base64'));
+    }
   }
   console.log(JSON.stringify({passed:report.passed,failed:report.failed,total:report.total,fatal:report.fatal}));
   process.exitCode=report.failed?1:0;

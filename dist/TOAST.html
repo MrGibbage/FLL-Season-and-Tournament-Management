@@ -5,11 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; connect-src 'none'; frame-src 'self' about:; img-src data: blob:; base-uri 'none'; form-action 'none'">
 <title>TOAST · Tournament ceremony toolkit</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2213%22%20fill%3D%22%23123241%22%2F%3E%0A%20%20%3Cpath%20fill%3D%22%23f4bc5c%22%20fill-rule%3D%22evenodd%22%20d%3D%22M8%2015h48l-2%2010-8%205H38v20h4l2%206H20l2-6h4V30h-8l-8-5zm6%205%201%203%205%203v-6zm30%200v6l5-3%201-3z%22%2F%3E%0A%3C%2Fsvg%3E">
 <style>:root{font-family:Segoe UI,system-ui,sans-serif;color:#172c39;background:#f3f6f7;font-size:16px;line-height:1.55;font-synthesis:none;--teal:#096b63;--navy:#123241;--muted:#526772}*{box-sizing:border-box}body{margin:0}header{padding:24px max(24px,calc((100vw - 1120px)/2));display:flex;align-items:center;justify-content:space-between;background:var(--navy);color:white;gap:24px}.brand{display:flex;align-items:center;gap:14px}.brandmark{display:grid;place-items:center;width:46px;height:46px;border-radius:12px;background:#f4bc5c;color:var(--navy);font-size:28px;font-weight:800}.brand strong{font-size:24px;letter-spacing:.1em}.brand div span{display:block;font-size:14px;color:#c9dadf}.local-badge{font-size:14px;color:#d6e8e5;border:1px solid #44616a;padding:8px 14px;border-radius:30px}main{max-width:1000px;margin:0 auto;padding:48px 24px}.intro{margin-bottom:32px}.eyebrow{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}h1{font-size:clamp(32px,5vw,48px);line-height:1.12;letter-spacing:-.035em;margin:12px 0 18px}.intro>p:last-child{max-width:620px;color:var(--muted);font-size:18px}h2{font-size:23px;line-height:1.3;margin:0 0 6px}h3{font-size:18px;margin:0 0 8px}p{margin:8px 0 16px}.panel{background:white;border:1px solid #dce5e8;border-radius:16px;padding:28px;margin:0 0 24px;box-shadow:0 3px 12px #16323d05}.section-heading{display:flex;align-items:flex-start;gap:16px;margin-bottom:22px}.section-heading p{margin:0;color:var(--muted)}.step{width:34px;height:34px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:#dceeea;color:var(--teal);font-weight:700}.dropzone{text-align:center;border:2px dashed #b4cbc9;border-radius:12px;background:#f6fbfa;padding:28px 20px}.dropzone.dragging{border-color:var(--teal);background:#e2f3ef}.dropzone p{margin:5px 0 12px}.file-symbol{font-size:32px;color:var(--teal)}.hint{font-size:14px;color:var(--muted)}.button{display:inline-block;font:600 15px Segoe UI,system-ui,sans-serif;line-height:1.4;padding:11px 18px;border:1px solid transparent;border-radius:8px;cursor:pointer;text-decoration:none;vertical-align:middle;margin:4px 8px 4px 0;transition:background .12s}.primary{background:var(--teal);color:white}.primary:hover{background:#08564f}.secondary{border-color:#bfced4;background:white;color:var(--navy)}.secondary:hover{background:#edf3f5}.quiet{background:transparent;color:var(--muted);text-decoration:underline}.button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,label:has(+input:focus-visible),input:focus-visible,summary:focus-visible{outline:3px solid #d98f1d;outline-offset:4px}.file-input{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}details{margin-top:18px;font-size:14px;color:var(--muted)}summary{cursor:pointer;font-weight:600}details p{margin-top:12px}details pre{white-space:pre-wrap;font-size:12px}.file-list{padding-left:22px;font-size:14px;color:var(--muted)}.status{font-weight:600;margin-top:18px}.facts{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}.fact{background:#edf3f5;padding:8px 14px;border-radius:8px;font-size:14px}.notice{padding:20px;border:1px solid;border-radius:10px;margin:16px 0}.notice ul{padding-left:22px;margin:8px 0;max-height:360px;overflow:auto;overflow-wrap:anywhere}.notice li{padding:3px 0}.error{background:#fff3f1;border-color:#e6b4ac;color:#802e25}.warning{background:#fff9e9;border-color:#e7ce91;color:#6c5019}.success{background:#eef8f1;border-color:#b4d8bd;color:#245d36}.check{display:flex;align-items:flex-start;gap:8px;margin-top:18px}.check input{width:20px;height:20px;flex-shrink:0}#approve{display:block;margin-top:8px;font:600 18px system-ui;width:160px;padding:10px;border:1px solid #a4936b;border-radius:6px}.actions{margin-top:20px}.document-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}.document-cards article{border:1px solid #dce5e8;border-radius:10px;padding:22px}.document-cards article p{color:var(--muted);min-height:74px}.document-cards article .eyebrow{font-size:12px}.document-cards h3{margin-top:8px;font-size:21px}.preview-heading{display:flex;justify-content:space-between;align-items:center;margin-top:24px}iframe{width:100%;height:650px;border:1px solid #ccdadd;border-radius:8px;background:white}footer{max-width:1000px;margin:0 auto;padding:0 24px 40px;color:var(--muted);font-size:14px}footer>span{margin-left:18px}code{background:#e9eff1;padding:2px 4px;border-radius:3px}[hidden]{display:none!important}@media(max-width:680px){header{padding:18px 20px}.local-badge{display:none}main{padding:32px 16px}.panel{padding:22px 18px}.document-cards{grid-template-columns:1fr}.document-cards article p{min-height:0}.button{font-size:14px;padding:11px 14px}footer>span{display:block;margin:8px 0}}
+
+/* Reading mode fills the current browser window without opening pop-ups. */
+#preview.expanded{position:fixed;inset:0;z-index:1000;background:white;padding:16px 24px;display:flex;flex-direction:column;margin:0}#preview.expanded .preview-heading{flex-shrink:0;margin:0 0 12px;gap:12px}#preview.expanded iframe{flex:1;min-height:0;height:auto;border-radius:0}#preview.expanded .preview-heading>div{display:flex;flex-wrap:wrap;justify-content:flex-end}@media(max-width:680px){#preview.expanded{padding:12px}#preview.expanded .preview-heading{align-items:flex-start}#preview.expanded h3{font-size:16px}#preview.expanded .button{padding:8px 10px;margin-right:0}}
+
+.brandmark{background:transparent}.brandmark svg{display:block;width:46px;height:46px}
 </style>
 </head>
 <body>
-<header><div class="brand"><span class="brandmark" aria-hidden="true">T</span><div><strong>TOAST</strong><span>Tournament OJS And Script Toolkit</span></div></div><span class="local-badge">Works offline · Files stay on your computer</span></header>
+<header><div class="brand"><span class="brandmark" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="13" fill="#123241"/>
+  <path fill="#f4bc5c" fill-rule="evenodd" d="M8 15h48l-2 10-8 5H38v20h4l2 6H20l2-6h4V30h-8l-8-5zm6 5 1 3 5 3v-6zm30 0v6l5-3 1-3z"/>
+</svg></span><div><strong>TOAST</strong><span>Tournament OJS And Script Toolkit</span></div></div><span class="local-badge">Works offline · Files stay on your computer</span></header>
 <main>
 <div class="intro"><p class="eyebrow">FIRST LEGO League · Tournament day</p><h1>From final results<br>to closing ceremony.</h1><p>Check your saved OJS workbooks, review the results, and prepare your ceremony documents.</p></div>
 <section class="panel" aria-labelledby="choose-heading">
@@ -34,7 +43,7 @@
 <div class="section-heading"><span class="step">3</span><div><h2 id="documents-heading">Your ceremony documents</h2><p>Download HTML files to open, print, or share. Your browser chooses where to save them.</p></div></div>
 <div class="document-cards"><article><span class="eyebrow">For your emcees</span><h3>Closing ceremony</h3><p>The complete script, team introductions, award winners, and advancement announcements.</p><button id="download-script" class="button primary" disabled>Download ceremony</button><button id="preview-script" class="button secondary" disabled>Preview ceremony</button></article><article><span class="eyebrow">For your records</span><h3>Tournament summary</h3><p>A compact record of award winners, advancing teams, and alternates.</p><button id="download-summary" class="button primary" disabled>Download summary</button><button id="preview-summary" class="button secondary" disabled>Preview summary</button></article></div>
 <p id="document-gate" class="hint"></p>
-<div id="preview" hidden><div class="preview-heading"><h3 id="preview-title">Document preview</h3><button id="close-preview" class="button quiet">Close preview</button></div><iframe id="preview-frame" sandbox="" title="Ceremony document preview" referrerpolicy="no-referrer"></iframe></div>
+<div id="preview" hidden><div class="preview-heading"><h3 id="preview-title">Document preview</h3><div><button id="expand-preview" class="button secondary" aria-pressed="false">Expand preview</button><button id="close-preview" class="button quiet">Close preview</button></div></div><iframe id="preview-frame" sandbox="" title="Ceremony document preview" referrerpolicy="no-referrer"></iframe></div>
 </section>
 <section id="failure" class="panel" hidden><h2>TOAST could not read these files</h2><p id="failure-message" role="alert"></p><p>Check that you selected saved, unencrypted OJS workbooks from the same tournament. Select the corrected files to try again.</p><button id="failure-report" class="button secondary">Download diagnostic report</button></section>
 </main>
@@ -99,7 +108,7 @@ const TOAST_ASSETS = {"templates": {"script_template-with-divisions.html.jinja":
 /* TOAST browser engine. Read-only Open XML reader; no network requests. */
 'use strict';
 (() => {
-const VERSION = '1.0.2';
+const VERSION = '1.0.4';
 const LIMITS = Object.freeze({fileBytes:25*1024*1024, unpackedBytes:100*1024*1024, entries:3000, tableCells:200000});
 const own = (o,k) => Object.prototype.hasOwnProperty.call(o,k);
 function parseJson(text) {
@@ -469,7 +478,18 @@ window.Toast=Object.freeze({VERSION,LIMITS,TABLES,parseJson,readWorkbook,checkCo
     $('refresh-help').textContent=retainedHandles?'After saving changes in Excel, click Check again to read the latest files.':'This selection cannot be refreshed directly. Check again will ask you to select the saved files so TOAST reads your latest changes.';
   }
   const outputButtons=['download-script','download-summary','preview-script','preview-summary'];
+  let previousOverflow='';
+  function expandPreview(expanded) {
+    const wasExpanded=$('preview').classList.contains('expanded');
+    if(expanded&&!wasExpanded)previousOverflow=document.body.style.overflow;
+    $('preview').classList.toggle('expanded',expanded);
+    document.body.style.overflow=expanded?'hidden':wasExpanded?previousOverflow:document.body.style.overflow;
+    $('expand-preview').textContent=expanded?'Return to TOAST':'Expand preview';
+    $('expand-preview').setAttribute('aria-pressed',String(expanded));
+  }
+  function closePreview() {expandPreview(false);$('preview').hidden=true;$('preview-frame').removeAttribute('srcdoc');}
   function clearView() {
+    closePreview();
     result=null;diagnostic=null;
     for(const id of ['review','documents','failure','preview','ready'])$(id).hidden=true;
     $('preview-frame').removeAttribute('srcdoc');
@@ -483,7 +503,7 @@ window.Toast=Object.freeze({VERSION,LIMITS,TABLES,parseJson,readWorkbook,checkCo
     const ready=permitted();outputButtons.forEach(id=>$(id).disabled=!ready);
     $('ready').hidden=!ready;
     $('document-gate').textContent=ready?'Both documents are ready.':result?.validation.errors.length?'Correct the errors before generating documents.':'Review the warnings and approve any intentional award omissions to unlock your documents.';
-    if(!ready){$('preview').hidden=true;$('preview-frame').removeAttribute('srcdoc');}
+    if(!ready)closePreview();
   }
   function notice(id,items) {
     $(id).hidden=!items.length;const list=$(id).querySelector('ul');list.replaceChildren();
@@ -588,7 +608,8 @@ window.Toast=Object.freeze({VERSION,LIMITS,TABLES,parseJson,readWorkbook,checkCo
     $('download-'+kind).onclick=()=>{if(permitted())download(result.names[kind],result.outputs[kind]);};
     $('preview-'+kind).onclick=()=>{if(permitted()){$('preview-title').textContent=kind==='script'?'Closing ceremony preview':'Tournament summary preview';$('preview-frame').srcdoc=result.outputs[kind];$('preview').hidden=false;$('preview').scrollIntoView({behavior:'smooth',block:'start'});}};
   }
-  $('close-preview').onclick=()=>{$('preview').hidden=true;$('preview-frame').removeAttribute('srcdoc');};
+  $('expand-preview').onclick=()=>{if(permitted()&&!$('preview').hidden)expandPreview(!$('preview').classList.contains('expanded'));};
+  $('close-preview').onclick=()=>{closePreview();$('preview-script').focus();};
   $('report').onclick=report;$('failure-report').onclick=report;
   $('reset').onclick=()=>{revision++;busy=false;retainedHandles=null;hasSelection=false;clearView();updateRefresh();$('file-list').replaceChildren();$('files').value='';$('status').textContent='Choose your files to begin.';$('dropzone').removeAttribute('aria-busy');$('choose-files').focus();};
   $('version').textContent=Toast.VERSION;

@@ -9,7 +9,10 @@ Open `dist/TOAST.html` in your browser. Save and close the OJS files in Excel,
 then choose or drop the single workbook or both division workbooks together.
 Review validation results. Warnings require acknowledgment; intentional missing
 award winners require typing exactly `YES`. Preview and download the ceremony
-and summary. Download a diagnostic report when troubleshooting.
+and summary. **Expand preview** fills the current browser window for reading the
+ceremony; **Return to TOAST** restores the normal layout. Close preview or load
+new files to leave reading mode. Download a copy for backup. Download a diagnostic
+report when troubleshooting.
 
 After every Excel change, save and click **Check again**. The supported file
 picker retains read-only file handles for the current session and calls
@@ -38,6 +41,10 @@ Their JavaScript SHA-256 checksums are verified. Later builds use the cached fil
 in `workspace/toast-browser-vendor`. There are no runtime CDN dependencies.
 Source is in this directory; standard templates remain at the repository root.
 `dist/` and `workspace/` are ignored build/test outputs.
+The build also generates `INSTRUCTIONS.html` in the repository root and in
+`dist/`, with the browser and executable versions inserted automatically. Include
+the instructions alongside TOAST and the OJS files. The source instructions are
+in `browser-toast/instructions.html`; edit that file rather than generated copies.
 
 ## Automated validation
 
@@ -103,7 +110,7 @@ See [TEST_PLAN.md](TEST_PLAN.md) for coverage and release checks.
 
 ## Release status
 
-Version 1.0.2 is ready for local acceptance testing. Automated Windows Chrome and
+Version 1.0.4 is ready for local acceptance testing. Automated Windows Chrome and
 Edge coverage is recorded in the generated reports. The responsive layout is
 also visually inspected at desktop and 390px widths. Actual macOS Safari,
 Firefox, native file dialogs, printing, and school-managed download policies

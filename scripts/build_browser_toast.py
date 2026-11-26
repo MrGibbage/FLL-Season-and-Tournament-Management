@@ -14,6 +14,7 @@ import re
 import sys
 import tempfile
 import urllib.request
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -47,10 +48,14 @@ def build(include_tests=False, refresh_fixtures=False):
     env = Environment()
     assets = {'templates': templates, 'required': {k: sorted(meta.find_undeclared_variables(env.parse(v)) - {'bg_color_0', 'bg_color_1'}) for k, v in templates.items()}}
     source = ROOT / 'browser-toast'
+    icon = (source / 'brand.svg').read_text(encoding='utf-8').strip()
+    favicon = '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,' + quote(icon, safe='') + '">'
+    def branding(document):
+        return document.replace('<!--FAVICON-->', favicon).replace('<!--BRAND_ICON-->', icon)
     bundles = ''.join(script((vendor / name).read_text(encoding='utf-8')) for name in ['fflate.js', 'nunjucks.js'])
     bundles += script('const TOAST_ASSETS = ' + json.dumps(assets, ensure_ascii=True).replace('<', '\\u003c') + ';')
     bundles += ''.join(script((source / name).read_text(encoding='utf-8')) for name in ['core.js', 'app.js'])
-    page = (source / 'index.html').read_text(encoding='utf-8')
+    page = branding((source / 'index.html').read_text(encoding='utf-8'))
     page = page.replace('/*STYLE*/', (source / 'style.css').read_text(encoding='utf-8'))
     notices = ''.join('<pre>' + html.escape((vendor / name).read_text(encoding='utf-8')) + '</pre>' for name in ['fflate.LICENSE', 'nunjucks.LICENSE'])
     page = page.replace('/*LICENSES*/', notices).replace('<!--BUNDLES-->', bundles)
@@ -58,6 +63,12 @@ def build(include_tests=False, refresh_fixtures=False):
     output.parent.mkdir(exist_ok=True)
     output.write_text(page, encoding='utf-8')
     print(f'Built {output} ({output.stat().st_size:,} bytes; no sample data included)')
+    browser_version = re.search(r"const VERSION = '([^']+)'", (source / 'core.js').read_text(encoding='utf-8')).group(1)
+    python_version = re.search(r'TOAST_VERSION = "([^"]+)"', (ROOT / 'fll-toast.py').read_text(encoding='utf-8')).group(1)
+    instructions = branding((source / 'instructions.html').read_text(encoding='utf-8')).replace('{{BROWSER_VERSION}}', browser_version).replace('{{PYTHON_VERSION}}', python_version)
+    for destination in [ROOT / 'INSTRUCTIONS.html', ROOT / 'dist/INSTRUCTIONS.html']:
+        destination.write_text(instructions, encoding='utf-8')
+    print(f'Built INSTRUCTIONS.html (browser {browser_version}, Python {python_version})')
     if include_tests:
         import build_toast_browser_probe
         snapshot = ROOT / 'workspace/toast-browser-fixtures.json'

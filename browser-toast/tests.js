@@ -171,6 +171,20 @@
   await asyncTest('UI: drop integration',async()=>{const dt=new DataTransfer();files(original.inputs).forEach(f=>dt.items.add(f));document.getElementById('dropzone').dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:dt}));for(let i=0;i<200&&!uiReport()?.tournament;i++)await new Promise(r=>setTimeout(r,10));assert(ToastApp.canDownload());});
   await asyncTest('UI: both actual download buttons',async()=>{document.getElementById('download-script').click();assert(downloads.at(-1)===original.result.names.script);assert(normalize(await blobs.at(-1).text())===normalize(original.result.outputs.script));document.getElementById('download-summary').click();assert(downloads.at(-1)===original.result.names.summary);assert(normalize(await blobs.at(-1).text())===normalize(original.result.outputs.summary));});
   await asyncTest('UI: sandboxed preview and close',async()=>{document.getElementById('preview-script').click();const frame=document.getElementById('preview-frame');assert(frame.getAttribute('sandbox')==='');assert(frame.srcdoc===original.result.outputs.script);document.getElementById('close-preview').click();assert(!frame.hasAttribute('srcdoc'));});
+  await asyncTest('UI: expanded ceremony fills window and returns without losing script',async()=>{
+    document.getElementById('preview-script').click();const frame=document.getElementById('preview-frame'),before=frame.srcdoc;
+    document.getElementById('expand-preview').click();const preview=document.getElementById('preview');assert(preview.classList.contains('expanded'));assert(getComputedStyle(preview).position==='fixed');assert(document.body.style.overflow==='hidden');assert(document.getElementById('expand-preview').getAttribute('aria-pressed')==='true');assert(frame.srcdoc===before);assert(frame.getAttribute('sandbox')==='');
+    document.getElementById('expand-preview').click();assert(!preview.classList.contains('expanded'));assert(document.body.style.overflow!=='hidden');assert(frame.srcdoc===before);document.getElementById('close-preview').click();
+  });
+  await asyncTest('UI: summary expands and closing restores scrolling',async()=>{
+    document.getElementById('preview-summary').click();document.getElementById('expand-preview').click();assert(document.getElementById('preview-frame').srcdoc===original.result.outputs.summary);document.getElementById('close-preview').click();assert(document.getElementById('preview').hidden);assert(!document.getElementById('preview').classList.contains('expanded'));assert(document.body.style.overflow!=='hidden');
+  });
+  await asyncTest('UI: replacing files closes expanded preview immediately',async()=>{
+    document.getElementById('preview-script').click();document.getElementById('expand-preview').click();const pending=ToastApp.loadFiles([new File(['bad'],'bad.xlsm')]);assert(!document.getElementById('preview').classList.contains('expanded'));assert(document.body.style.overflow!=='hidden');assert(!document.getElementById('preview-frame').hasAttribute('srcdoc'));await pending;await load(original.inputs);
+  });
+  await asyncTest('UI: expansion cannot bypass validation',async()=>{
+    await ToastApp.loadFiles([new File(['bad'],'bad.xlsm')]);document.getElementById('expand-preview').click();assert(!document.getElementById('preview').classList.contains('expanded'));await load(original.inputs);
+  });
   await asyncTest('UI: latest report after file change',async()=>{await load(single.inputs);document.getElementById('report').click();const report=JSON.parse(await blobs.at(-1).text());assert(report.tournament===single.result.config.INFO.tournament_long_name);assert(report.files.length===1);assert(!('fixtures' in report));});
   const writeAwardOmission=()=>rewrite(single.inputs[0],z=>{
     const table=single.books[0].tables.TournamentData,col=table.headers.indexOf('Award');

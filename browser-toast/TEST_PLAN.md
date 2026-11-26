@@ -33,6 +33,7 @@ Chrome and Edge. A missing result is a failure, never an implicit pass.
 | File input and drag/drop | Actual File/DataTransfer events on production controls | Load and validate correctly |
 | Downloads | Click each real download button and inspect captured Blob bytes/name | Match prepared documents and Python filenames |
 | Preview | Open/close preview; attempt preview before approval | Use sandboxed srcdoc; show only approved outputs |
+| Expanded preview | Expand/return ceremony, expand/close summary, replace files while expanded, attempt expansion after an error | Fill browser window, retain sandbox and document, restore scrolling, never bypass validation |
 | Approval gates | Warning acknowledgment, lowercase yes, exact YES, reselect files | Only explicit current approvals unlock documents; reset on every new selection |
 | Reports | Run one case then another; export after error or new selection | Report latest files, current outcome, and approval state; never old fixture results |
 | Recovery | Empty/unsupported/corrupt/lock files, bad/multiple JSON, valid selection after failure | Clear stale outputs immediately; allow correction and retry |
